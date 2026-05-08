@@ -6,6 +6,8 @@ import { isInitializeRequest, McpServer } from '@modelcontextprotocol/server';
 import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
 
+import { sleep } from './utils.js';
+
 // Create an MCP server with implementation details
 const getServer = () => {
     const server = new McpServer(
@@ -44,8 +46,6 @@ const getServer = () => {
             })
         },
         async ({ name }, ctx) => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
             await ctx.mcpReq.log('debug', `Starting multi-greet for ${name}`);
 
             await sleep(1000); // Wait 1 second before first greeting

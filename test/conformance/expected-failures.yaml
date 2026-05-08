@@ -8,14 +8,14 @@ client: []
 # specific legacy content types (text, image, audio, embedded resource) which this
 # fork no longer produces.
 server:
-  - tools-call-simple-text
-  - tools-call-image
-  - tools-call-audio
-  - tools-call-embedded-resource
-  - tools-call-mixed-content
-  - tools-call-with-logging
-  - tools-call-with-progress
-  - tools-call-sampling
-  - tools-call-elicitation
-  - elicitation-sep1034-defaults
-  - elicitation-sep1330-enums
+    - tools-call-simple-text
+    - tools-call-image
+    - tools-call-audio
+    - tools-call-embedded-resource
+    - tools-call-mixed-content
+    - tools-call-with-logging
+    - tools-call-with-progress
+    - tools-call-sampling
+    - tools-call-elicitation
+    - elicitation-sep1034-defaults
+    - elicitation-sep1330-enums

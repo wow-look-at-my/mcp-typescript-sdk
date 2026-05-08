@@ -18,6 +18,9 @@ import type { Request, Response } from 'express';
 import express from 'express';
 import * as z from 'zod/v4';
 
+// Utility
+const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Server state
 const resourceSubscriptions = new Set<string>();
 const watchedResourceContent = 'Watched resource content';
@@ -296,8 +299,6 @@ function createMcpServer() {
             inputSchema: z.object({})
         },
         async (_args, ctx) => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
             console.log(`[${ctx.sessionId}] Starting test_reconnection tool...`);
 
             // Get the transport for this session
@@ -316,7 +317,8 @@ function createMcpServer() {
             return {
                 structuredContent: {
                     status: 'success',
-                    message: 'Reconnection test completed successfully. If you received this, the client properly reconnected after stream closure.'
+                    message:
+                        'Reconnection test completed successfully. If you received this, the client properly reconnected after stream closure.'
                 }
             };
         }
@@ -357,7 +359,9 @@ function createMcpServer() {
                 };
             } catch (error) {
                 return {
-                    structuredContent: { error: `Sampling not supported or error: ${error instanceof Error ? error.message : String(error)}` }
+                    structuredContent: {
+                        error: `Sampling not supported or error: ${error instanceof Error ? error.message : String(error)}`
+                    }
                 };
             }
         }
@@ -398,7 +402,9 @@ function createMcpServer() {
                 };
             } catch (error) {
                 return {
-                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
+                    structuredContent: {
+                        error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
+                    }
                 };
             }
         }
@@ -459,7 +465,9 @@ function createMcpServer() {
                 };
             } catch (error) {
                 return {
-                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
+                    structuredContent: {
+                        error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
+                    }
                 };
             }
         }
@@ -542,7 +550,9 @@ function createMcpServer() {
                 };
             } catch (error) {
                 return {
-                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
+                    structuredContent: {
+                        error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
+                    }
                 };
             }
         }

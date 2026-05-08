@@ -552,7 +552,9 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(receivedMessages[2]!.message).toBe('Request 3 of 3');
 
             // Verify final result includes all responses
-            expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ message: 'Received responses: Response 1, Response 2, Response 3' }) }]);
+            expect(result.content).toEqual([
+                { type: 'text', text: JSON.stringify({ message: 'Received responses: Response 1, Response 2, Response 3' }) }
+            ]);
 
             // Verify task is completed
             const task = await client.request({
@@ -1240,7 +1242,9 @@ describe('Task Lifecycle Integration Tests', () => {
             }
 
             // Verify final result is correct
-            expect(result.content).toEqual([{ type: 'text', text: JSON.stringify({ message: 'Received all responses: Response 1, Response 2, Response 3' }) }]);
+            expect(result.content).toEqual([
+                { type: 'text', text: JSON.stringify({ message: 'Received all responses: Response 1, Response 2, Response 3' }) }
+            ]);
 
             // Verify task is now completed
             task = await client.request({

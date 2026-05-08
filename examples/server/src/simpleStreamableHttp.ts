@@ -17,6 +17,7 @@ import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
 
 import { InMemoryEventStore } from './inMemoryEventStore.js';
+import { sleep } from './utils.js';
 
 // Check for OAuth flag
 const useOAuth = process.argv.includes('--oauth');
@@ -76,8 +77,6 @@ const getServer = () => {
             }
         },
         async ({ name }, ctx) => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
             await ctx.mcpReq.log('debug', `Starting multi-greet for ${name}`);
 
             await sleep(1000); // Wait 1 second before first greeting
@@ -270,7 +269,6 @@ const getServer = () => {
             })
         },
         async ({ interval, count }, ctx) => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
             let counter = 0;
 
             while (count === 0 || counter < count) {

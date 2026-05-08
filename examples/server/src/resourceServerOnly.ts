@@ -49,13 +49,9 @@ const staticTokenVerifier: OAuthTokenVerifier = {
 };
 
 const server = new McpServer({ name: 'rs-only', version: '1.0.0' }, { capabilities: {} });
-server.registerTool(
-    'whoami',
-    { description: 'Returns the authenticated subject.', inputSchema: z.object({}) },
-    async (_args, ctx) => ({
-        structuredContent: { client: ctx.http?.authInfo?.clientId ?? 'anon' }
-    })
-);
+server.registerTool('whoami', { description: 'Returns the authenticated subject.', inputSchema: z.object({}) }, async (_args, ctx) => ({
+    structuredContent: { client: ctx.http?.authInfo?.clientId ?? 'anon' }
+}));
 
 const app = createMcpExpressApp();
 

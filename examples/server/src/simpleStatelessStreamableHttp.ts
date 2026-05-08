@@ -5,6 +5,8 @@ import { McpServer } from '@modelcontextprotocol/server';
 import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
 
+import { sleep } from './utils.js';
+
 const getServer = () => {
     // Create an MCP server with implementation details
     const server = new McpServer(
@@ -50,7 +52,6 @@ const getServer = () => {
             })
         },
         async ({ interval, count }, ctx) => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
             let counter = 0;
 
             while (count === 0 || counter < count) {
