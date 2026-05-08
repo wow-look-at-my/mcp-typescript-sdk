@@ -73,10 +73,12 @@ describe('Task Lifecycle Integration Tests', () => {
                             await (shouldFail
                                 ? ctx.task.store.storeTaskResult(task.taskId, 'failed', {
                                       content: [{ type: 'text', text: 'Task failed as requested' }],
+                                      errorMessage: 'Task failed as requested',
                                       isError: true
                                   })
                                 : ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                      content: [{ type: 'text', text: `Completed after ${duration}ms` }]
+                                      content: [{ type: 'json', data: { message: `Completed after ${duration}ms` } }],
+                                      structuredContent: { message: `Completed after ${duration}ms` }
                                   }));
                         } catch {
                             // Task may have been cleaned up if test ended
@@ -94,7 +96,7 @@ describe('Task Lifecycle Integration Tests', () => {
                 },
                 async getTaskResult(_args, ctx) {
                     const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                    return result as { content: Array<{ type: 'text'; text: string }> };
+                    return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                 }
             }
         );
@@ -125,7 +127,8 @@ describe('Task Lifecycle Integration Tests', () => {
                             // Complete immediately if userName was provided
                             try {
                                 await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                    content: [{ type: 'text', text: `Hello, ${userName}!` }]
+                                    content: [{ type: 'json', data: { message: `Hello, ${userName}!` } }],
+                                    structuredContent: { message: `Hello, ${userName}!` }
                                 });
                             } catch {
                                 // Task may have been cleaned up if test ended
@@ -156,7 +159,8 @@ describe('Task Lifecycle Integration Tests', () => {
                                     : 'Unknown';
                             try {
                                 await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                    content: [{ type: 'text', text: `Hello, ${name}!` }]
+                                    content: [{ type: 'json', data: { message: `Hello, ${name}!` } }],
+                                    structuredContent: { message: `Hello, ${name}!` }
                                 });
                             } catch {
                                 // Task may have been cleaned up if test ended
@@ -175,7 +179,7 @@ describe('Task Lifecycle Integration Tests', () => {
                 },
                 async getTaskResult(_args, ctx) {
                     const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                    return result as { content: Array<{ type: 'text'; text: string }> };
+                    return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                 }
             }
         );
@@ -252,7 +256,7 @@ describe('Task Lifecycle Integration Tests', () => {
             // Verify result is stored
             const result = await taskStore.getTaskResult(taskId);
             expect(result).toBeDefined();
-            expect(result.content).toEqual([{ type: 'text', text: 'Completed after 500ms' }]);
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Completed after 500ms' } }]);
 
             await transport.close();
         });
@@ -293,6 +297,7 @@ describe('Task Lifecycle Integration Tests', () => {
             const result = await taskStore.getTaskResult(taskId);
             expect(result.content).toEqual([{ type: 'text', text: 'Task failed as requested' }]);
             expect(result.isError).toBe(true);
+            expect(result.errorMessage).toBe('Task failed as requested');
 
             await transport.close();
         });
@@ -450,8 +455,10 @@ describe('Task Lifecycle Integration Tests', () => {
 
                             // Complete with all responses
                             try {
+                                const message = `Received responses: ${responses.join(', ')}`;
                                 await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                    content: [{ type: 'text', text: `Received responses: ${responses.join(', ')}` }]
+                                    content: [{ type: 'json', data: { message } }],
+                                    structuredContent: { message }
                                 });
                             } catch {
                                 // Task may have been cleaned up if test ended
@@ -469,7 +476,7 @@ describe('Task Lifecycle Integration Tests', () => {
                     },
                     async getTaskResult(_args, ctx) {
                         const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                        return result as { content: Array<{ type: 'text'; text: string }> };
+                        return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                     }
                 }
             );
@@ -545,7 +552,7 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(receivedMessages[2]!.message).toBe('Request 3 of 3');
 
             // Verify final result includes all responses
-            expect(result.content).toEqual([{ type: 'text', text: 'Received responses: Response 1, Response 2, Response 3' }]);
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Received responses: Response 1, Response 2, Response 3' } }]);
 
             // Verify task is completed
             const task = await client.request({
@@ -652,7 +659,7 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(elicitationRequestMeta?.[RELATED_TASK_META_KEY]).toEqual({ taskId });
 
             // Verify final result
-            expect(result.content).toEqual([{ type: 'text', text: 'Hello, TestUser!' }]);
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Hello, TestUser!' } }]);
 
             // Verify task is now completed
             const finalTask = await elicitClient.request({
@@ -931,7 +938,7 @@ describe('Task Lifecycle Integration Tests', () => {
                     },
                     async getTaskResult(_args, ctx) {
                         const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                        return result as { content: Array<{ type: 'text'; text: string }> };
+                        return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                     }
                 }
             );
@@ -1098,8 +1105,10 @@ describe('Task Lifecycle Integration Tests', () => {
 
                                 // Complete with all responses
                                 try {
+                                    const message = `Received all responses: ${responses.join(', ')}`;
                                     await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                        content: [{ type: 'text', text: `Received all responses: ${responses.join(', ')}` }]
+                                        content: [{ type: 'json', data: { message } }],
+                                        structuredContent: { message }
                                     });
                                 } catch {
                                     // Task may have been cleaned up if test ended
@@ -1107,8 +1116,10 @@ describe('Task Lifecycle Integration Tests', () => {
                             } catch (error) {
                                 // Handle errors
                                 try {
+                                    const errorMsg = `Error: ${error}`;
                                     await ctx.task.store.storeTaskResult(task.taskId, 'failed', {
-                                        content: [{ type: 'text', text: `Error: ${error}` }],
+                                        content: [{ type: 'text', text: errorMsg }],
+                                        errorMessage: errorMsg,
                                         isError: true
                                     });
                                 } catch {
@@ -1128,7 +1139,7 @@ describe('Task Lifecycle Integration Tests', () => {
                     },
                     async getTaskResult(_args, ctx) {
                         const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                        return result as { content: Array<{ type: 'text'; text: string }> };
+                        return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                     }
                 }
             );
@@ -1229,7 +1240,7 @@ describe('Task Lifecycle Integration Tests', () => {
             }
 
             // Verify final result is correct
-            expect(result.content).toEqual([{ type: 'text', text: 'Received all responses: Response 1, Response 2, Response 3' }]);
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Received all responses: Response 1, Response 2, Response 3' } }]);
 
             // Verify task is now completed
             task = await client.request({
@@ -1295,7 +1306,8 @@ describe('Task Lifecycle Integration Tests', () => {
                                 // Complete the task after all messages are queued
                                 try {
                                     await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                                        content: [{ type: 'text', text: 'Task completed quickly' }]
+                                        content: [{ type: 'json', data: { message: 'Task completed quickly' } }],
+                                        structuredContent: { message: 'Task completed quickly' }
                                     });
                                 } catch {
                                     // Task may have been cleaned up if test ended
@@ -1303,8 +1315,10 @@ describe('Task Lifecycle Integration Tests', () => {
                             } catch (error) {
                                 // Handle errors
                                 try {
+                                    const errorMsg = `Error: ${error}`;
                                     await ctx.task.store.storeTaskResult(task.taskId, 'failed', {
-                                        content: [{ type: 'text', text: `Error: ${error}` }],
+                                        content: [{ type: 'text', text: errorMsg }],
+                                        errorMessage: errorMsg,
                                         isError: true
                                     });
                                 } catch {
@@ -1324,7 +1338,7 @@ describe('Task Lifecycle Integration Tests', () => {
                     },
                     async getTaskResult(_args, ctx) {
                         const result = await ctx.task.store.getTaskResult(ctx.task.id);
-                        return result as { content: Array<{ type: 'text'; text: string }> };
+                        return result as { content: Array<{ type: 'json'; data: { message: string } }>; structuredContent: { message: string } };
                     }
                 }
             );
@@ -1399,7 +1413,7 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(receivedMessages[1]!.message).toBe('Quick message 2 of 2');
 
             // Verify final result is correct
-            expect(result.content).toEqual([{ type: 'text', text: 'Task completed quickly' }]);
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Task completed quickly' } }]);
 
             // Verify queue is cleaned up - calling tasks/result again should only return the result
             receivedMessages.length = 0; // Clear the array
@@ -1411,7 +1425,7 @@ describe('Task Lifecycle Integration Tests', () => {
 
             // No messages should be delivered on second call (queue was cleaned up)
             expect(receivedMessages.length).toBe(0);
-            expect(result2.content).toEqual([{ type: 'text', text: 'Task completed quickly' }]);
+            expect(result2.content).toEqual([{ type: 'json', data: { message: 'Task completed quickly' } }]);
 
             await transport.close();
         }, 10_000);
@@ -1538,8 +1552,9 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(lastMessage.type).toBe('result');
 
             // The stored result should contain isError: true and the real failure content
-            const result = lastMessage.result as { content: Array<{ type: string; text: string }>; isError: boolean };
+            const result = lastMessage.result as { content: Array<{ type: string; text: string }>; isError: boolean; errorMessage: string };
             expect(result.isError).toBe(true);
+            expect(result.errorMessage).toBe('Task failed as requested');
             expect(result.content).toEqual([{ type: 'text', text: 'Task failed as requested' }]);
 
             await transport.close();
@@ -1616,8 +1631,8 @@ describe('Task Lifecycle Integration Tests', () => {
             expect(elicitationMessage).toContain('What is your name?');
 
             // Verify result content
-            const result = lastMessage.result as { content: Array<{ type: string; text: string }> };
-            expect(result.content).toEqual([{ type: 'text', text: 'Hello, StreamUser!' }]);
+            const result = lastMessage.result as { content: Array<{ type: string; data: { message: string } }> };
+            expect(result.content).toEqual([{ type: 'json', data: { message: 'Hello, StreamUser!' } }]);
 
             await transport.close();
         }, 15_000);

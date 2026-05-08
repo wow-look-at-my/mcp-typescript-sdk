@@ -75,7 +75,7 @@ function createMcpServer(): McpServer {
         async (args: { message?: string }) => {
             const message = args.message || 'No message provided';
             return {
-                content: [{ type: 'text', text: `Echo: ${message}` }]
+                structuredContent: { message: `Echo: ${message}` }
             };
         }
     );
@@ -88,7 +88,7 @@ function createMcpServer(): McpServer {
         },
         async () => {
             return {
-                content: [{ type: 'text', text: 'test' }]
+                structuredContent: { message: 'test' }
             };
         }
     );
@@ -105,7 +105,7 @@ function createMcpServer(): McpServer {
         async (args: { action?: string }) => {
             const action = args.action || 'default-admin-action';
             return {
-                content: [{ type: 'text', text: `Admin action performed: ${action}` }]
+                structuredContent: { message: `Admin action performed: ${action}` }
             };
         }
     );

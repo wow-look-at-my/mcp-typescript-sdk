@@ -57,12 +57,6 @@ server.registerTool(
         };
 
         return {
-            content: [
-                {
-                    type: 'text',
-                    text: JSON.stringify(structuredContent, null, 2)
-                }
-            ],
             structuredContent
         };
     }

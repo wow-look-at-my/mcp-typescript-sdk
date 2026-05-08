@@ -97,7 +97,6 @@ server.registerTool(
     async ({ weightKg, heightM }) => {
         const output = { bmi: weightKg / (heightM * heightM) };
         return {
-            content: [{ type: 'text', text: JSON.stringify(output) }],
             structuredContent: output
         };
     }

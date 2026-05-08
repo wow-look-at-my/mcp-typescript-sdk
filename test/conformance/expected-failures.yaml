@@ -2,3 +2,20 @@
 # CI exits 0 if only these fail, exits 1 on unexpected failures or stale entries.
 
 client: []
+
+# This fork only supports structuredContent in tool results (auto-generates content
+# as [{ type: 'json', data: structuredContent }]). The following scenarios expect
+# specific legacy content types (text, image, audio, embedded resource) which this
+# fork no longer produces.
+server:
+  - tools-call-simple-text
+  - tools-call-image
+  - tools-call-audio
+  - tools-call-embedded-resource
+  - tools-call-mixed-content
+  - tools-call-with-logging
+  - tools-call-with-progress
+  - tools-call-sampling
+  - tools-call-elicitation
+  - elicitation-sep1034-defaults
+  - elicitation-sep1330-enums

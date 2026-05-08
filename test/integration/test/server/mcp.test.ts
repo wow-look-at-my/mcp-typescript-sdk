@@ -115,7 +115,7 @@ describe('Zod v4', () => {
                 async ctx => {
                     await ctx.mcpReq.log('info', 'Log from convenience method', 'test-logger');
                     return {
-                        content: [{ type: 'text' as const, text: 'done' }]
+                        structuredContent: { message: 'done' }
                     };
                 }
             );
@@ -164,7 +164,7 @@ describe('Zod v4', () => {
                         }
                     });
                     return {
-                        content: [{ type: 'text' as const, text: 'done' }]
+                        structuredContent: { message: 'done' }
                     };
                 }
             );
@@ -214,7 +214,7 @@ describe('Zod v4', () => {
                         maxTokens: 100
                     });
                     return {
-                        content: [{ type: 'text' as const, text: 'done' }]
+                        structuredContent: { message: 'done' }
                     };
                 }
             );
@@ -276,12 +276,7 @@ describe('Zod v4', () => {
                     }
 
                     return {
-                        content: [
-                            {
-                                type: 'text' as const,
-                                text: `Operation completed with ${steps} steps`
-                            }
-                        ]
+                        structuredContent: { message: `Operation completed with ${steps} steps` }
                     };
                 }
             );
@@ -466,12 +461,7 @@ describe('Zod v4', () => {
             };
 
             mcpServer.registerTool('test', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -494,12 +484,7 @@ describe('Zod v4', () => {
 
             // Adding another tool triggers the update notification
             mcpServer.registerTool('test2', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             // Yield event loop to let the notification fly
@@ -531,23 +516,13 @@ describe('Zod v4', () => {
 
             // Register initial tool
             const tool = mcpServer.registerTool('test', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Initial response'
-                    }
-                ]
+                structuredContent: { message: 'Initial response' }
             }));
 
             // Update the tool
             tool.update({
                 callback: async () => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Updated response'
-                        }
-                    ]
+                    structuredContent: { message: 'Updated response' }
                 })
             });
 
@@ -565,8 +540,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Updated response'
+                    type: 'json',
+                    data: { message: 'Updated response' }
                 }
             ]);
 
@@ -600,12 +575,7 @@ describe('Zod v4', () => {
                     })
                 },
                 async ({ name }) => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Initial: ${name}`
-                        }
-                    ]
+                    structuredContent: { message: `Initial: ${name}` }
                 })
             );
 
@@ -616,12 +586,7 @@ describe('Zod v4', () => {
                     value: z.number()
                 }),
                 callback: async ({ name, value }) => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Updated: ${name}, ${value}`
-                        }
-                    ]
+                    structuredContent: { message: `Updated: ${name}, ${value}` }
                 })
             });
 
@@ -655,8 +620,8 @@ describe('Zod v4', () => {
 
             expect(callResult.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Updated: test, 42'
+                    type: 'json',
+                    data: { message: 'Updated: test, 42' }
                 }
             ]);
 
@@ -690,7 +655,6 @@ describe('Zod v4', () => {
                     })
                 },
                 async () => ({
-                    content: [{ type: 'text', text: '' }],
                     structuredContent: {
                         result: 42
                     }
@@ -704,7 +668,6 @@ describe('Zod v4', () => {
                     sum: z.number()
                 }),
                 callback: async () => ({
-                    content: [{ type: 'text', text: '' }],
                     structuredContent: {
                         result: 42,
                         sum: 100
@@ -766,12 +729,7 @@ describe('Zod v4', () => {
 
             // Register initial tool
             const tool = mcpServer.registerTool('test', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -783,12 +741,7 @@ describe('Zod v4', () => {
             // Now update the tool
             tool.update({
                 callback: async () => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Updated response'
-                        }
-                    ]
+                    structuredContent: { message: 'Updated response' }
                 })
             });
 
@@ -823,7 +776,7 @@ describe('Zod v4', () => {
             });
 
             mcpServer.registerTool('test', {}, async () => ({
-                content: [{ type: 'text', text: 'Test' }]
+                structuredContent: { message: 'Test' }
             }));
 
             const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -844,7 +797,7 @@ describe('Zod v4', () => {
             });
 
             mcpServer.registerTool('test', {}, async () => ({
-                content: [{ type: 'text', text: 'Test' }]
+                structuredContent: { message: 'Test' }
             }));
 
             const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -918,7 +871,7 @@ describe('Zod v4', () => {
                     inputSchema: z.object({ name: z.string(), value: z.number() })
                 },
                 async ({ name, value }) => ({
-                    content: [{ type: 'text', text: `${name}: ${value}` }]
+                    structuredContent: { message: `${name}: ${value}` }
                 })
             );
 
@@ -955,12 +908,7 @@ describe('Zod v4', () => {
             });
 
             mcpServer.registerTool('test', { description: 'Test description' }, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             // new api
@@ -970,12 +918,7 @@ describe('Zod v4', () => {
                     description: 'Test description'
                 },
                 async () => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Test response'
-                        }
-                    ]
+                    structuredContent: { message: 'Test response' }
                 })
             );
 
@@ -1013,12 +956,7 @@ describe('Zod v4', () => {
                     annotations: { title: 'Test Tool', readOnlyHint: true }
                 },
                 async () => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Test response'
-                        }
-                    ]
+                    structuredContent: { message: 'Test response' }
                 })
             );
 
@@ -1058,7 +996,7 @@ describe('Zod v4', () => {
                     annotations: { title: 'Test Tool', readOnlyHint: true }
                 },
                 async ({ name }) => ({
-                    content: [{ type: 'text', text: `Hello, ${name}!` }]
+                    structuredContent: { message: `Hello, ${name}!` }
                 })
             );
 
@@ -1105,7 +1043,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async ({ name }) => ({
-                    content: [{ type: 'text', text: `Hello, ${name}!` }]
+                    structuredContent: { message: `Hello, ${name}!` }
                 })
             );
 
@@ -1153,7 +1091,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Test response' }]
+                    structuredContent: { message: 'Test response' }
                 })
             );
 
@@ -1199,12 +1137,7 @@ describe('Zod v4', () => {
                     })
                 },
                 async ({ name, value }) => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: `${name}: ${value}`
-                        }
-                    ]
+                    structuredContent: { message: `${name}: ${value}` }
                 })
             );
 
@@ -1244,22 +1177,12 @@ describe('Zod v4', () => {
             });
 
             mcpServer.registerTool('test', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             expect(() => {
                 mcpServer.registerTool('test', {}, async () => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Test response 2'
-                        }
-                    ]
+                    structuredContent: { message: 'Test response 2' }
                 }));
             }).toThrow(/already registered/);
         });
@@ -1274,10 +1197,10 @@ describe('Zod v4', () => {
             });
 
             // This should succeed
-            mcpServer.registerTool('tool1', {}, () => ({ content: [] }));
+            mcpServer.registerTool('tool1', {}, () => ({ structuredContent: {} }));
 
             // This should also succeed and not throw about request handlers
-            mcpServer.registerTool('tool2', {}, () => ({ content: [] }));
+            mcpServer.registerTool('tool2', {}, () => ({ structuredContent: {} }));
         });
 
         /***
@@ -1313,17 +1236,7 @@ describe('Zod v4', () => {
                         processedInput: input,
                         resultType: 'structured',
                         timestamp: '2023-01-01T00:00:00Z'
-                    },
-                    content: [
-                        {
-                            type: 'text',
-                            text: JSON.stringify({
-                                processedInput: input,
-                                resultType: 'structured',
-                                timestamp: '2023-01-01T00:00:00Z'
-                            })
-                        }
-                    ]
+                    }
                 })
             );
 
@@ -1368,12 +1281,12 @@ describe('Zod v4', () => {
             expect(structuredContent.resultType).toBe('structured');
             expect(structuredContent.timestamp).toBe('2023-01-01T00:00:00Z');
 
-            // For backward compatibility, content is auto-generated from structuredContent
+            // Content is auto-generated as JsonContent from structuredContent
             expect(result.content).toBeDefined();
             expect(result.content!).toHaveLength(1);
-            expect(result.content![0]).toMatchObject({ type: 'text' });
-            const textContent = result.content![0] as TextContent;
-            expect(JSON.parse(textContent.text)).toEqual(result.structuredContent);
+            expect(result.content![0]).toMatchObject({ type: 'json' });
+            const jsonContent = result.content![0] as { type: 'json'; data: unknown };
+            expect(jsonContent.data).toEqual(result.structuredContent);
         });
 
         /***
@@ -1587,12 +1500,7 @@ describe('Zod v4', () => {
             mcpServer.registerTool('test-tool', {}, async ctx => {
                 receivedSessionId = ctx.sessionId;
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Test response'
-                        }
-                    ]
+                    structuredContent: { message: 'Test response' }
                 };
             });
 
@@ -1630,12 +1538,7 @@ describe('Zod v4', () => {
             mcpServer.registerTool('request-id-test', {}, async ctx => {
                 receivedRequestId = ctx.mcpReq.id;
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Received request ID: ${ctx.mcpReq.id}`
-                        }
-                    ]
+                    structuredContent: { message: `Received request ID: ${ctx.mcpReq.id}` }
                 };
             });
 
@@ -1655,8 +1558,8 @@ describe('Zod v4', () => {
             expect(result.content).toEqual(
                 expect.arrayContaining([
                     {
-                        type: 'text',
-                        text: expect.stringContaining('Received request ID:')
+                        type: 'json',
+                        data: expect.objectContaining({ message: expect.stringContaining('Received request ID:') })
                     }
                 ])
             );
@@ -1692,12 +1595,7 @@ describe('Zod v4', () => {
                     params: { level: 'debug', data: loggingMessage }
                 });
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Test response'
-                        }
-                    ]
+                    structuredContent: { message: 'Test response' }
                 };
             });
 
@@ -1735,12 +1633,7 @@ describe('Zod v4', () => {
                     })
                 },
                 async ({ input }) => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Processed: ${input}`
-                        }
-                    ]
+                    structuredContent: { message: `Processed: ${input}` }
                 })
             );
 
@@ -1760,8 +1653,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Processed: hello'
+                    type: 'json',
+                    data: { message: 'Processed: hello' }
                 }
             ]);
         });
@@ -1819,12 +1712,7 @@ describe('Zod v4', () => {
             });
 
             mcpServer.registerTool('test-tool', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             const [clientTransport, serverTransport] = InMemoryTransport.createLinkedPair();
@@ -1859,12 +1747,7 @@ describe('Zod v4', () => {
             });
 
             const tool = mcpServer.registerTool('test-tool', {}, async () => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Test response'
-                    }
-                ]
+                structuredContent: { message: 'Test response' }
             }));
 
             tool.disable();
@@ -1968,7 +1851,7 @@ describe('Zod v4', () => {
                     _meta: metaData
                 },
                 async ({ name }) => ({
-                    content: [{ type: 'text', text: `Hello, ${name}!` }]
+                    structuredContent: { message: `Hello, ${name}!` }
                 })
             );
 
@@ -2004,7 +1887,7 @@ describe('Zod v4', () => {
                     inputSchema: z.object({ name: z.string() })
                 },
                 async ({ name }) => ({
-                    content: [{ type: 'text', text: `Hello, ${name}!` }]
+                    structuredContent: { message: `Hello, ${name}!` }
                 })
             );
 
@@ -2175,7 +2058,7 @@ describe('Zod v4', () => {
                 {
                     description: 'A valid tool name'
                 },
-                async () => ({ content: [{ type: 'text', text: 'Success' }] })
+                async () => ({ structuredContent: { message: 'Success' } })
             );
 
             // Test tool name with warnings (starts with dash)
@@ -2184,7 +2067,7 @@ describe('Zod v4', () => {
                 {
                     description: 'A tool name that generates warnings'
                 },
-                async () => ({ content: [{ type: 'text', text: 'Success' }] })
+                async () => ({ structuredContent: { message: 'Success' } })
             );
 
             // Test invalid tool name (contains spaces)
@@ -2193,7 +2076,7 @@ describe('Zod v4', () => {
                 {
                     description: 'An invalid tool name'
                 },
-                async () => ({ content: [{ type: 'text', text: 'Success' }] })
+                async () => ({ structuredContent: { message: 'Success' } })
             );
 
             // Verify that warnings were issued (both for warnings and validation failures)
@@ -4361,7 +4244,7 @@ describe('Zod v4', () => {
 
             // Tool 1: Only name
             mcpServer.registerTool('tool_name_only', {}, async () => ({
-                content: [{ type: 'text', text: 'Response' }]
+                structuredContent: { message: 'Response' }
             }));
 
             // Tool 2: Name and annotations.title
@@ -4374,7 +4257,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -4386,7 +4269,7 @@ describe('Zod v4', () => {
                     description: 'Tool with regular title'
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -4401,7 +4284,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -4797,33 +4680,18 @@ describe('Zod v4', () => {
                                 result.content.flexibleDates as string
                             );
                             return {
-                                content: [
-                                    {
-                                        type: 'text',
-                                        text: `Found these alternatives: ${alternatives.join(', ')}`
-                                    }
-                                ]
+                                structuredContent: { message: `Found these alternatives: ${alternatives.join(', ')}` }
                             };
                         }
 
                         return {
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: 'No booking made. Original date not available.'
-                                }
-                            ]
+                            structuredContent: { message: 'No booking made. Original date not available.' }
                         };
                     }
 
                     await makeBooking(restaurant, date, partySize);
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Booked table for ${partySize} at ${restaurant} on ${date}`
-                            }
-                        ]
+                        structuredContent: { message: `Booked table for ${partySize} at ${restaurant} on ${date}` }
                     };
                 }
             );
@@ -4877,8 +4745,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).toHaveBeenCalledWith('ABC Restaurant', '2024-12-25', 2, 'same_week');
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28'
+                    type: 'json',
+                    data: { message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' }
                 }
             ]);
         });
@@ -4915,8 +4783,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'No booking made. Original date not available.'
+                    type: 'json',
+                    data: { message: 'No booking made. Original date not available.' }
                 }
             ]);
         });
@@ -4950,8 +4818,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'No booking made. Original date not available.'
+                    type: 'json',
+                    data: { message: 'No booking made. Original date not available.' }
                 }
             ]);
         });
@@ -4977,10 +4845,10 @@ describe('Zod v4', () => {
             server.registerTool('contact', { inputSchema: unionSchema }, async args => {
                 return args.type === 'email'
                     ? {
-                          content: [{ type: 'text' as const, text: `Email contact: ${args.email}` }]
+                          structuredContent: { message: `Email contact: ${args.email}` }
                       }
                     : {
-                          content: [{ type: 'text' as const, text: `Phone contact: ${args.phone}` }]
+                          structuredContent: { message: `Phone contact: ${args.phone}` }
                       };
             });
 
@@ -4998,8 +4866,8 @@ describe('Zod v4', () => {
 
             expect(emailResult.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Email contact: test@example.com'
+                    type: 'json',
+                    data: { message: 'Email contact: test@example.com' }
                 }
             ]);
 
@@ -5013,8 +4881,8 @@ describe('Zod v4', () => {
 
             expect(phoneResult.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Phone contact: +1234567890'
+                    type: 'json',
+                    data: { message: 'Phone contact: +1234567890' }
                 }
             ]);
         });
@@ -5036,12 +4904,7 @@ describe('Zod v4', () => {
 
             server.registerTool('user', { inputSchema: intersectionSchema }, async args => {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `User: ${args.id}, ${args.name}, ${args.age} years old`
-                        }
-                    ]
+                    structuredContent: { message: `User: ${args.id}, ${args.name}, ${args.age} years old` }
                 };
             });
 
@@ -5060,8 +4923,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'User: 123, John Doe, 30 years old'
+                    type: 'json',
+                    data: { message: 'User: 123, John Doe, 30 years old' }
                 }
             ]);
         });
@@ -5091,12 +4954,7 @@ describe('Zod v4', () => {
                     return item.type === 'text' ? item.content.toUpperCase() : item.value * 2;
                 });
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Processed: ${processed.join(', ')}`
-                        }
-                    ]
+                    structuredContent: { message: `Processed: ${processed.join(', ')}` }
                 };
             });
 
@@ -5117,8 +4975,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Processed: HELLO, 10, WORLD'
+                    type: 'json',
+                    data: { message: 'Processed: HELLO, 10, WORLD' }
                 }
             ]);
         });
@@ -5141,7 +4999,7 @@ describe('Zod v4', () => {
 
             server.registerTool('union-test', { inputSchema: unionSchema }, async () => {
                 return {
-                    content: [{ type: 'text' as const, text: 'Success' }]
+                    structuredContent: { message: 'Success' }
                 };
             });
 
@@ -5198,7 +5056,7 @@ describe('Zod v4', () => {
 
             server.registerTool('preprocess-test', { inputSchema: preprocessSchema }, async args => {
                 return {
-                    content: [{ type: 'text' as const, text: `Hello, ${args.name}!` }]
+                    structuredContent: { message: `Hello, ${args.name}!` }
                 };
             });
 
@@ -5214,8 +5072,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Hello, World!'
+                    type: 'json',
+                    data: { message: 'Hello, World!' }
                 }
             ]);
         });
@@ -5244,7 +5102,7 @@ describe('Zod v4', () => {
 
             server.registerTool('transform-test', { inputSchema: transformSchema }, async args => {
                 return {
-                    content: [{ type: 'text' as const, text: `Full name: ${args.fullName}` }]
+                    structuredContent: { message: `Full name: ${args.fullName}` }
                 };
             });
 
@@ -5259,8 +5117,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Full name: John Doe'
+                    type: 'json',
+                    data: { message: 'Full name: John Doe' }
                 }
             ]);
         });
@@ -5284,7 +5142,7 @@ describe('Zod v4', () => {
 
             server.registerTool('pipe-test', { inputSchema: pipeSchema }, async args => {
                 return {
-                    content: [{ type: 'text' as const, text: `Value: ${args.value}, Processed: ${args.processed}` }]
+                    structuredContent: { message: `Value: ${args.value}, Processed: ${args.processed}` }
                 };
             });
 
@@ -5299,8 +5157,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Value: test, Processed: true'
+                    type: 'json',
+                    data: { message: 'Value: test, Processed: true' }
                 }
             ]);
         });
@@ -5341,7 +5199,7 @@ describe('Zod v4', () => {
 
             server.registerTool('complex-transform', { inputSchema: complexSchema }, async args => {
                 return {
-                    content: [{ type: 'text' as const, text: `${args.name}: ${args.count} -> ${args.doubled}` }]
+                    structuredContent: { message: `${args.name}: ${args.count} -> ${args.doubled}` }
                 };
             });
 
@@ -5357,8 +5215,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'items: 5 -> 10'
+                    type: 'json',
+                    data: { message: 'items: 5 -> 10' }
                 }
             ]);
         });
@@ -5618,7 +5476,7 @@ describe('Zod v4', () => {
 
             // Tool 1: Only name
             mcpServer.registerTool('tool_name_only', {}, async () => ({
-                content: [{ type: 'text', text: 'Response' }]
+                structuredContent: { message: 'Response' }
             }));
 
             // Tool 2: Name and annotations.title
@@ -5631,7 +5489,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -5643,7 +5501,7 @@ describe('Zod v4', () => {
                     description: 'Tool with regular title'
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -5658,7 +5516,7 @@ describe('Zod v4', () => {
                     }
                 },
                 async () => ({
-                    content: [{ type: 'text', text: 'Response' }]
+                    structuredContent: { message: 'Response' }
                 })
             );
 
@@ -6055,33 +5913,18 @@ describe('Zod v4', () => {
                                 result.content.flexibleDates as string
                             );
                             return {
-                                content: [
-                                    {
-                                        type: 'text',
-                                        text: `Found these alternatives: ${alternatives.join(', ')}`
-                                    }
-                                ]
+                                structuredContent: { message: `Found these alternatives: ${alternatives.join(', ')}` }
                             };
                         }
 
                         return {
-                            content: [
-                                {
-                                    type: 'text',
-                                    text: 'No booking made. Original date not available.'
-                                }
-                            ]
+                            structuredContent: { message: 'No booking made. Original date not available.' }
                         };
                     }
 
                     await makeBooking(restaurant, date, partySize);
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Booked table for ${partySize} at ${restaurant} on ${date}`
-                            }
-                        ]
+                        structuredContent: { message: `Booked table for ${partySize} at ${restaurant} on ${date}` }
                     };
                 }
             );
@@ -6135,8 +5978,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).toHaveBeenCalledWith('ABC Restaurant', '2024-12-25', 2, 'same_week');
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28'
+                    type: 'json',
+                    data: { message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' }
                 }
             ]);
         });
@@ -6173,8 +6016,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'No booking made. Original date not available.'
+                    type: 'json',
+                    data: { message: 'No booking made. Original date not available.' }
                 }
             ]);
         });
@@ -6208,8 +6051,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'No booking made. Original date not available.'
+                    type: 'json',
+                    data: { message: 'No booking made. Original date not available.' }
                 }
             ]);
         });
@@ -6235,10 +6078,10 @@ describe('Zod v4', () => {
             server.registerTool('contact', { inputSchema: unionSchema }, async args => {
                 return args.type === 'email'
                     ? {
-                          content: [{ type: 'text', text: `Email contact: ${args.email}` }]
+                          structuredContent: { message: `Email contact: ${args.email}` }
                       }
                     : {
-                          content: [{ type: 'text', text: `Phone contact: ${args.phone}` }]
+                          structuredContent: { message: `Phone contact: ${args.phone}` }
                       };
             });
 
@@ -6256,8 +6099,8 @@ describe('Zod v4', () => {
 
             expect(emailResult.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Email contact: test@example.com'
+                    type: 'json',
+                    data: { message: 'Email contact: test@example.com' }
                 }
             ]);
 
@@ -6271,8 +6114,8 @@ describe('Zod v4', () => {
 
             expect(phoneResult.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Phone contact: +1234567890'
+                    type: 'json',
+                    data: { message: 'Phone contact: +1234567890' }
                 }
             ]);
         });
@@ -6294,12 +6137,7 @@ describe('Zod v4', () => {
 
             server.registerTool('user', { inputSchema: intersectionSchema }, async args => {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `User: ${args.id}, ${args.name}, ${args.age} years old`
-                        }
-                    ]
+                    structuredContent: { message: `User: ${args.id}, ${args.name}, ${args.age} years old` }
                 };
             });
 
@@ -6318,8 +6156,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'User: 123, John Doe, 30 years old'
+                    type: 'json',
+                    data: { message: 'User: 123, John Doe, 30 years old' }
                 }
             ]);
         });
@@ -6349,12 +6187,7 @@ describe('Zod v4', () => {
                     return item.type === 'text' ? item.content.toUpperCase() : item.value * 2;
                 });
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Processed: ${processed.join(', ')}`
-                        }
-                    ]
+                    structuredContent: { message: `Processed: ${processed.join(', ')}` }
                 };
             });
 
@@ -6375,8 +6208,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'text',
-                    text: 'Processed: HELLO, 10, WORLD'
+                    type: 'json',
+                    data: { message: 'Processed: HELLO, 10, WORLD' }
                 }
             ]);
         });
@@ -6399,7 +6232,7 @@ describe('Zod v4', () => {
 
             server.registerTool('union-test', { inputSchema: unionSchema }, async () => {
                 return {
-                    content: [{ type: 'text', text: 'Success' }]
+                    structuredContent: { message: 'Success' }
                 };
             });
 
@@ -6510,7 +6343,8 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'text' as const, text: `Processed: ${input}` }]
+                                content: [{ type: 'json' as const, data: { message: `Processed: ${input}` } }],
+                                structuredContent: { message: `Processed: ${input}` }
                             });
                         }, 200);
 
@@ -6613,7 +6447,8 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'text' as const, text: `Result: ${value * 2}` }]
+                                content: [{ type: 'json' as const, data: { message: `Result: ${value * 2}` } }],
+                                structuredContent: { message: `Result: ${value * 2}` }
                             });
                             releaseLatch();
                         }, 150);
@@ -6646,7 +6481,7 @@ describe('Zod v4', () => {
 
             // Should receive CallToolResult directly, not CreateTaskResult
             expect(result).toHaveProperty('content');
-            expect(result.content).toEqual([{ type: 'text' as const, text: 'Result: 42' }]);
+            expect(result.content).toEqual([{ type: 'json' as const, data: { message: 'Result: 42' } }]);
             expect(result).not.toHaveProperty('task');
 
             // Wait for async operations to complete
@@ -6719,7 +6554,8 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'text' as const, text: `Completed: ${data}` }]
+                                content: [{ type: 'json' as const, data: { message: `Completed: ${data}` } }],
+                                structuredContent: { message: `Completed: ${data}` }
                             });
                             releaseLatch();
                         }, 200);
@@ -6838,7 +6674,8 @@ describe('Zod v4', () => {
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'failed', {
                                 content: [{ type: 'text' as const, text: 'Error occurred' }],
-                                isError: true
+                                isError: true,
+                                errorMessage: 'Error occurred'
                             });
                             releaseLatch();
                         }, 150);

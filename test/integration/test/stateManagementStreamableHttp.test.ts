@@ -54,7 +54,7 @@ async function setupServer(withSessionManagement: boolean) {
         },
         async ({ name }) => {
             return {
-                content: [{ type: 'text', text: `Hello, ${name}!` }]
+                structuredContent: { message: `Hello, ${name}!` }
             };
         }
     );
@@ -199,7 +199,7 @@ describe('Zod v4', () => {
                 });
 
                 // Verify tool result
-                expect(greetingResult.content).toEqual([{ type: 'text', text: 'Hello, Stateless Transport!' }]);
+                expect(greetingResult.content).toEqual([{ type: 'json', data: { message: 'Hello, Stateless Transport!' } }]);
 
                 // Clean up
                 await transport.close();
@@ -310,7 +310,7 @@ describe('Zod v4', () => {
                 });
 
                 // Verify tool result
-                expect(greetingResult.content).toEqual([{ type: 'text', text: 'Hello, Stateful Transport!' }]);
+                expect(greetingResult.content).toEqual([{ type: 'json', data: { message: 'Hello, Stateful Transport!' } }]);
 
                 // Clean up
                 await transport.close();

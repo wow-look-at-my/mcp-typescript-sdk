@@ -415,12 +415,7 @@ const getServer = () => {
                 (async () => {
                     await new Promise(resolve => setTimeout(resolve, duration));
                     await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Completed ${duration}ms delay`
-                            }
-                        ]
+                        structuredContent: { message: `Completed ${duration}ms delay` }
                     });
                 })();
 
@@ -524,12 +519,12 @@ const getServer = () => {
                         }
 
                         await taskStore.storeTaskResult(task.taskId, 'completed', {
-                            content: [{ type: 'text', text: resultText }]
+                            structuredContent: { message: resultText }
                         });
                     } catch (error) {
                         console.error('Error in collect-user-info-task:', error);
                         await taskStore.storeTaskResult(task.taskId, 'failed', {
-                            content: [{ type: 'text', text: `Error: ${error}` }],
+                            errorMessage: `Error: ${error}`,
                             isError: true
                         });
                     }

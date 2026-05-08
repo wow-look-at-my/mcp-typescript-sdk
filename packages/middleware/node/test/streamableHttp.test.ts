@@ -504,7 +504,7 @@ describe('Zod v4', () => {
             expect(dataLine).toBeDefined();
 
             const eventData = JSON.parse(dataLine!.slice(5));
-            const queryParams = JSON.parse(eventData.result.content[0].text);
+            const queryParams = eventData.result.content[0].data.params;
             expect(queryParams).toEqual({ foo: 'bar', debug: 'true' });
         });
 
@@ -1112,8 +1112,8 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: { status: 'Inactive', token: undefined } }],
-                    structuredContent: { status: 'Inactive', token: undefined }
+                    content: [{ type: 'json', data: { status: 'Inactive' } }],
+                    structuredContent: { status: 'Inactive' }
                 },
                 id: 'call-1'
             });

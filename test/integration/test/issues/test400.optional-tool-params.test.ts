@@ -31,12 +31,9 @@ describe('Issue #400: Zod v4', () => {
                 })
             },
             async ({ limit, offset }) => ({
-                content: [
-                    {
-                        type: 'text',
-                        text: `limit: ${limit ?? 'default'}, offset: ${offset ?? 'default'}`
-                    }
-                ]
+                structuredContent: {
+                    message: `limit: ${limit ?? 'default'}, offset: ${offset ?? 'default'}`
+                }
             })
         );
 
@@ -56,8 +53,8 @@ describe('Issue #400: Zod v4', () => {
         expect(result.isError).toBeUndefined();
         expect(result.content).toEqual([
             {
-                type: 'text',
-                text: 'limit: default, offset: default'
+                type: 'json',
+                data: { message: 'limit: default, offset: default' }
             }
         ]);
     });
