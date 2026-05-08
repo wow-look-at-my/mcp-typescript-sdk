@@ -16,12 +16,12 @@ import { randomUUID } from 'node:crypto';
 
 import { createMcpExpressApp } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult } from '@modelcontextprotocol/server';
 import { McpServer } from '@modelcontextprotocol/server';
 import cors from 'cors';
 import type { Request, Response } from 'express';
 
 import { InMemoryEventStore } from './inMemoryEventStore.js';
+import { sleep } from './utils.js';
 
 // Create a fresh MCP server per client connection to avoid shared state between clients
 const getServer = () => {
@@ -41,9 +41,7 @@ const getServer = () => {
         {
             description: 'A long-running task that sends progress updates. Server will disconnect mid-task to demonstrate polling.'
         },
-        async (ctx): Promise<CallToolResult> => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+        async ctx => {
             console.log(`[${ctx.sessionId}] Starting long-task...`);
 
             // Send first progress notification
@@ -73,12 +71,7 @@ const getServer = () => {
             console.log(`[${ctx.sessionId}] Task complete`);
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Long task completed successfully!'
-                    }
-                ]
+                structuredContent: { message: 'Long task completed successfully!' }
             };
         }
     );

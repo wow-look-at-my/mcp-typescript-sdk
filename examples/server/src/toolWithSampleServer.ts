@@ -34,13 +34,9 @@ mcpServer.registerTool(
         });
 
         // Since we're not passing tools param to createMessage, response.content is single content
+        const summary = response.content.type === 'text' ? response.content.text : 'Unable to generate summary';
         return {
-            content: [
-                {
-                    type: 'text',
-                    text: response.content.type === 'text' ? response.content.text : 'Unable to generate summary'
-                }
-            ]
+            structuredContent: { summary }
         };
     }
 );

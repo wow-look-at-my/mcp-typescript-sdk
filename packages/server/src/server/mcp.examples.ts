@@ -7,7 +7,6 @@
  * @module
  */
 
-import type { CallToolResult } from '@modelcontextprotocol/core';
 import * as z from 'zod/v4';
 
 import { McpServer } from './mcp.js';
@@ -43,10 +42,8 @@ function McpServer_registerTool_basic(server: McpServer) {
             outputSchema: z.object({ bmi: z.number() })
         },
         async ({ weightKg, heightM }) => {
-            const output = { bmi: weightKg / (heightM * heightM) };
             return {
-                content: [{ type: 'text', text: JSON.stringify(output) }],
-                structuredContent: output
+                structuredContent: { bmi: weightKg / (heightM * heightM) }
             };
         }
     );
@@ -133,12 +130,12 @@ function McpServer_registerTool_logging(server: McpServer) {
             description: 'Fetch data from an API',
             inputSchema: z.object({ url: z.string() })
         },
-        async ({ url }, ctx): Promise<CallToolResult> => {
+        async ({ url }, ctx) => {
             await ctx.mcpReq.log('info', `Fetching ${url}`);
             const res = await fetch(url);
             await ctx.mcpReq.log('debug', `Response status: ${res.status}`);
             const text = await res.text();
-            return { content: [{ type: 'text', text }] };
+            return { structuredContent: { text, status: res.status } };
         }
     );
     //#endregion McpServer_registerTool_logging

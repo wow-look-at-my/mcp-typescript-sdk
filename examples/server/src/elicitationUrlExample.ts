@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
 import { createProtectedResourceMetadataRouter, demoTokenVerifier, setupAuthServer } from '@modelcontextprotocol/examples-shared';
 import { createMcpExpressApp, getOAuthProtectedResourceMetadataUrl, requireBearerAuth } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult, ElicitRequestURLParams, ElicitResult } from '@modelcontextprotocol/server';
+import type { ElicitRequestURLParams, ElicitResult } from '@modelcontextprotocol/server';
 import { isInitializeRequest, McpServer, UrlElicitationRequiredError } from '@modelcontextprotocol/server';
 import cors from 'cors';
 import type { Request, Response } from 'express';
@@ -41,7 +41,7 @@ const getServer = () => {
                 cartId: z.string().describe('The ID of the cart to confirm')
             })
         },
-        async ({ cartId }, ctx): Promise<CallToolResult> => {
+        async ({ cartId }, ctx) => {
             /*
         In a real world scenario, there would be some logic here to check if the user has the provided cartId.
         For the purposes of this example, we'll throw an error (-> elicits the client to open a URL to confirm payment)
@@ -74,7 +74,7 @@ const getServer = () => {
                 param1: z.string().describe('First parameter')
             })
         },
-        async (_, ctx): Promise<CallToolResult> => {
+        async (_, ctx) => {
             /*
         In a real world scenario, there would be some logic here to check if we already have a valid access token for the user.
         Auth info (with a subject or `sub` claim) can be typically be found in `ctx.http?.authInfo`.

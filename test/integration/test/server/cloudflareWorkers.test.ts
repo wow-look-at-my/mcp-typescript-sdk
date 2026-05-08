@@ -69,7 +69,7 @@ const server = new McpServer({ name: "test-server", version: "1.0.0" });
 server.registerTool("greet", {
     description: "Greet someone"
 }, async (args) => ({
-    content: [{ type: "text", text: "Hello, " + (args.name || "World") + "!" }]
+    structuredContent: { message: "Hello, " + (args.name || "World") + "!" }
 }));
 
 const transport = new WebStandardStreamableHTTPServerTransport();

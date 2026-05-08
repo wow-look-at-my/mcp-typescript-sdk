@@ -11,10 +11,10 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
         const server = new McpServer({ name: 't', version: '1.0.0' });
 
         server.registerTool('a', { inputSchema: { x: z.number() } }, async ({ x }) => ({
-            content: [{ type: 'text' as const, text: String(x) }]
+            structuredContent: { value: x }
         }));
         server.registerTool('b', { inputSchema: { y: z.number() } }, async ({ y }) => ({
-            content: [{ type: 'text' as const, text: String(y) }]
+            structuredContent: { value: y }
         }));
 
         const tools = (server as unknown as { _registeredTools: Record<string, { inputSchema?: unknown }> })._registeredTools;
@@ -27,7 +27,6 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
         const server = new McpServer({ name: 't', version: '1.0.0' });
 
         server.registerTool('out', { inputSchema: { n: z.number() }, outputSchema: { result: z.string() } }, async ({ n }) => ({
-            content: [{ type: 'text' as const, text: String(n) }],
             structuredContent: { result: String(n) }
         }));
 
@@ -39,7 +38,7 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
         const server = new McpServer({ name: 't', version: '1.0.0' });
 
         server.registerTool('c', { inputSchema: z.object({ x: z.number() }) }, async ({ x }) => ({
-            content: [{ type: 'text' as const, text: String(x) }]
+            structuredContent: { value: x }
         }));
 
         const tools = (server as unknown as { _registeredTools: Record<string, { inputSchema?: unknown }> })._registeredTools;
@@ -83,7 +82,7 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
         let received: { x: number } | undefined;
         server.registerTool('echo', { inputSchema: { x: z.number() } }, async args => {
             received = args;
-            return { content: [{ type: 'text' as const, text: String(args.x) }] };
+            return { structuredContent: { value: args.x } };
         });
 
         const [client, srv] = InMemoryTransport.createLinkedPair();
@@ -114,8 +113,12 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
         await vi.waitFor(() => expect(responses.some(r => 'id' in r && r.id === 2)).toBe(true));
 
         expect(received).toEqual({ x: 7 });
-        const result = responses.find(r => 'id' in r && r.id === 2) as { result?: { content: Array<{ text: string }> } };
-        expect(result.result?.content[0]?.text).toBe('7');
+        const result = responses.find(r => 'id' in r && r.id === 2) as {
+            result?: { content: Array<{ type: string; text?: string }>; structuredContent?: { value: number } };
+        };
+        expect(result.result?.content[0]?.type).toBe('text');
+        expect(result.result?.content[0]?.text).toBe(JSON.stringify({ value: 7 }));
+        expect(result.result?.structuredContent?.value).toBe(7);
 
         await server.close();
     });

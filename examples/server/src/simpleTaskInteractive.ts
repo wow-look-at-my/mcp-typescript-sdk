@@ -558,7 +558,7 @@ const createServer = (): Server => {
 
                     console.log(`[Server] Completing task with result: ${text}`);
                     await taskStore.storeTaskResult(task.taskId, 'completed', {
-                        content: [{ type: 'text', text }]
+                        structuredContent: { message: text }
                     });
                 } else if (name === 'write_haiku') {
                     const topic = args?.topic ?? 'nature';
@@ -583,13 +583,13 @@ const createServer = (): Server => {
                     console.log(`[Server] Received sampling response: ${haiku.slice(0, 50)}...`);
                     console.log('[Server] Completing task with haiku');
                     await taskStore.storeTaskResult(task.taskId, 'completed', {
-                        content: [{ type: 'text', text: `Haiku:\n${haiku}` }]
+                        structuredContent: { message: `Haiku:\n${haiku}` }
                     });
                 }
             } catch (error) {
                 console.error(`[Server] Task ${task.taskId} failed:`, error);
                 await taskStore.storeTaskResult(task.taskId, 'failed', {
-                    content: [{ type: 'text', text: `Error: ${error}` }],
+                    errorMessage: `Error: ${error}`,
                     isError: true
                 });
             } finally {

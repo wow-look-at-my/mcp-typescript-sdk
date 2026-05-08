@@ -59,6 +59,7 @@ import type {
     InitializeRequestParamsSchema,
     InitializeRequestSchema,
     InitializeResultSchema,
+    JsonContentSchema,
     JSONRPCErrorResponseSchema,
     JSONRPCMessageSchema,
     JSONRPCNotificationSchema,
@@ -287,6 +288,7 @@ export type GetPromptRequestParams = Infer<typeof GetPromptRequestParamsSchema>;
 export type GetPromptRequest = Infer<typeof GetPromptRequestSchema>;
 export type TextContent = Infer<typeof TextContentSchema>;
 export type ImageContent = Infer<typeof ImageContentSchema>;
+export type JsonContent = Infer<typeof JsonContentSchema>;
 export type AudioContent = Infer<typeof AudioContentSchema>;
 export type ToolUseContent = Infer<typeof ToolUseContentSchema>;
 export type ToolResultContent = Infer<typeof ToolResultContentSchema>;

@@ -12,7 +12,6 @@ import { randomUUID } from 'node:crypto';
 import { createServer } from 'node:http';
 
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult } from '@modelcontextprotocol/server';
 import { McpServer, SUPPORTED_PROTOCOL_VERSIONS } from '@modelcontextprotocol/server';
 
 // Add support for a newer protocol version (first in list is fallback)
@@ -33,13 +32,8 @@ server.registerTool(
         title: 'Protocol Info',
         description: 'Returns protocol version configuration'
     },
-    async (): Promise<CallToolResult> => ({
-        content: [
-            {
-                type: 'text',
-                text: JSON.stringify({ supportedVersions: CUSTOM_VERSIONS }, null, 2)
-            }
-        ]
+    async () => ({
+        structuredContent: { supportedVersions: CUSTOM_VERSIONS }
     })
 );
 

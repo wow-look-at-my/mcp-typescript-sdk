@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 
-import type { CallToolResult, JSONRPCErrorResponse, JSONRPCMessage } from '@modelcontextprotocol/core';
+import type { JSONRPCErrorResponse, JSONRPCMessage } from '@modelcontextprotocol/core';
 import * as z from 'zod/v4';
 
 import { McpServer } from '../../src/server/mcp.js';
@@ -132,8 +132,8 @@ describe('Zod v4', () => {
                     description: 'A simple greeting tool',
                     inputSchema: z.object({ name: z.string().describe('Name to greet') })
                 },
-                async ({ name }): Promise<CallToolResult> => {
-                    return { content: [{ type: 'text', text: `Hello, ${name}!` }] };
+                async ({ name }) => {
+                    return { structuredContent: { greeting: `Hello, ${name}!` } };
                 }
             );
 
@@ -260,12 +260,8 @@ describe('Zod v4', () => {
                 expect(eventData).toMatchObject({
                     jsonrpc: '2.0',
                     result: {
-                        content: [
-                            {
-                                type: 'text',
-                                text: 'Hello, Test User!'
-                            }
-                        ]
+                        content: [{ type: 'text', text: JSON.stringify({ greeting: 'Hello, Test User!' }) }],
+                        structuredContent: { greeting: 'Hello, Test User!' }
                     },
                     id: 'call-1'
                 });
@@ -437,8 +433,8 @@ describe('Zod v4', () => {
             mcpServer.registerTool(
                 'echo',
                 { description: 'Echo tool', inputSchema: z.object({ message: z.string() }) },
-                async ({ message }): Promise<CallToolResult> => {
-                    return { content: [{ type: 'text', text: message }] };
+                async ({ message }) => {
+                    return { structuredContent: { echo: message } };
                 }
             );
 
@@ -485,8 +481,8 @@ describe('Zod v4', () => {
             mcpServer.registerTool(
                 'greet',
                 { description: 'Greeting tool', inputSchema: z.object({ name: z.string() }) },
-                async ({ name }): Promise<CallToolResult> => {
-                    return { content: [{ type: 'text', text: `Hello, ${name}!` }] };
+                async ({ name }) => {
+                    return { structuredContent: { greeting: `Hello, ${name}!` } };
                 }
             );
 
@@ -554,7 +550,8 @@ describe('Zod v4', () => {
             expect(data).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'text', text: 'Hello, World!' }]
+                    content: [{ type: 'text', text: JSON.stringify({ greeting: 'Hello, World!' }) }],
+                    structuredContent: { greeting: 'Hello, World!' }
                 },
                 id: 'call-1'
             });
@@ -657,8 +654,8 @@ describe('Zod v4', () => {
             mcpServer.registerTool(
                 'greet',
                 { description: 'Greeting tool', inputSchema: z.object({ name: z.string() }) },
-                async ({ name }): Promise<CallToolResult> => {
-                    return { content: [{ type: 'text', text: `Hello, ${name}!` }] };
+                async ({ name }) => {
+                    return { structuredContent: { greeting: `Hello, ${name}!` } };
                 }
             );
 

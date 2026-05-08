@@ -85,40 +85,25 @@ const getServer = () => {
                     };
 
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Registration successful!\n\nUsername: ${username}\nEmail: ${email}\nNewsletter: ${newsletter ? 'Yes' : 'No'}`
-                            }
-                        ]
+                        structuredContent: {
+                            status: 'success',
+                            username,
+                            email,
+                            newsletter: newsletter ?? false
+                        }
                     };
                 } else if (result.action === 'decline') {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: 'Registration cancelled by user.'
-                            }
-                        ]
+                        structuredContent: { status: 'cancelled', reason: 'user_declined' }
                     };
                 } else {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: 'Registration was cancelled.'
-                            }
-                        ]
+                        structuredContent: { status: 'cancelled', reason: 'cancelled' }
                     };
                 }
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Registration failed: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ],
+                    errorMessage: `Registration failed: ${error instanceof Error ? error.message : String(error)}`,
                     isError: true
                 };
             }
@@ -161,7 +146,7 @@ const getServer = () => {
 
                 if (basicInfo.action !== 'accept' || !basicInfo.content) {
                     return {
-                        content: [{ type: 'text', text: 'Event creation cancelled.' }]
+                        structuredContent: { status: 'cancelled' }
                     };
                 }
 
@@ -197,7 +182,7 @@ const getServer = () => {
 
                 if (dateTime.action !== 'accept' || !dateTime.content) {
                     return {
-                        content: [{ type: 'text', text: 'Event creation cancelled.' }]
+                        structuredContent: { status: 'cancelled' }
                     };
                 }
 
@@ -208,21 +193,11 @@ const getServer = () => {
                 };
 
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Event created successfully!\n\n${JSON.stringify(event, null, 2)}`
-                        }
-                    ]
+                    structuredContent: { status: 'success', event }
                 };
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Event creation failed: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ],
+                    errorMessage: `Event creation failed: ${error instanceof Error ? error.message : String(error)}`,
                     isError: true
                 };
             }
@@ -285,30 +260,20 @@ const getServer = () => {
 
                 if (result.action === 'accept' && result.content) {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Address updated successfully!\n\n${JSON.stringify(result.content, null, 2)}`
-                            }
-                        ]
+                        structuredContent: { status: 'success', address: result.content }
                     };
                 } else if (result.action === 'decline') {
                     return {
-                        content: [{ type: 'text', text: 'Address update cancelled by user.' }]
+                        structuredContent: { status: 'cancelled', reason: 'user_declined' }
                     };
                 } else {
                     return {
-                        content: [{ type: 'text', text: 'Address update was cancelled.' }]
+                        structuredContent: { status: 'cancelled', reason: 'cancelled' }
                     };
                 }
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Address update failed: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ],
+                    errorMessage: `Address update failed: ${error instanceof Error ? error.message : String(error)}`,
                     isError: true
                 };
             }

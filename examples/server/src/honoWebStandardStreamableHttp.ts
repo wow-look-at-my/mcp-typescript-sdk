@@ -8,7 +8,6 @@
  */
 
 import { serve } from '@hono/node-server';
-import type { CallToolResult } from '@modelcontextprotocol/server';
 import { McpServer, WebStandardStreamableHTTPServerTransport } from '@modelcontextprotocol/server';
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
@@ -28,11 +27,9 @@ server.registerTool(
         description: 'A simple greeting tool',
         inputSchema: z.object({ name: z.string().describe('Name to greet') })
     },
-    async ({ name }): Promise<CallToolResult> => {
-        return {
-            content: [{ type: 'text', text: `Hello, ${name}! (from Hono + WebStandard transport)` }]
-        };
-    }
+    async ({ name }) => ({
+        structuredContent: { message: `Hello, ${name}! (from Hono + WebStandard transport)` }
+    })
 );
 
 // Create a stateless transport (no options = no session management)

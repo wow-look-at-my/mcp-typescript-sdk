@@ -2,10 +2,11 @@ import { randomUUID } from 'node:crypto';
 
 import { createMcpExpressApp } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult } from '@modelcontextprotocol/server';
 import { isInitializeRequest, McpServer } from '@modelcontextprotocol/server';
 import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
+
+import { sleep } from './utils.js';
 
 // Create an MCP server with implementation details
 const getServer = () => {
@@ -30,16 +31,9 @@ const getServer = () => {
                 name: z.string().describe('Name to greet')
             })
         },
-        async ({ name }): Promise<CallToolResult> => {
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Hello, ${name}!`
-                    }
-                ]
-            };
-        }
+        async ({ name }) => ({
+            structuredContent: { message: `Hello, ${name}!` }
+        })
     );
 
     // Register a tool that sends multiple greetings with notifications
@@ -51,9 +45,7 @@ const getServer = () => {
                 name: z.string().describe('Name to greet')
             })
         },
-        async ({ name }, ctx): Promise<CallToolResult> => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+        async ({ name }, ctx) => {
             await ctx.mcpReq.log('debug', `Starting multi-greet for ${name}`);
 
             await sleep(1000); // Wait 1 second before first greeting
@@ -65,12 +57,7 @@ const getServer = () => {
             await ctx.mcpReq.log('info', `Sending second greeting to ${name}`);
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Good morning, ${name}!`
-                    }
-                ]
+                structuredContent: { message: `Good morning, ${name}!` }
             };
         }
     );

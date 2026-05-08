@@ -23,7 +23,7 @@ server.registerTool(
         inputSchema: toStandardJsonSchema(v.object({ name: v.string() }))
     },
     async ({ name }) => ({
-        content: [{ type: 'text', text: `Hello, ${name}!` }]
+        structuredContent: { greeting: `Hello, ${name}!` }
     })
 );
 

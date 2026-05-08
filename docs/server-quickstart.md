@@ -237,10 +237,8 @@ server.registerTool(
 
     if (!alertsData) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: 'Failed to retrieve alerts data',
-        }],
+        errorMessage: 'Failed to retrieve alerts data',
+        isError: true as const,
       };
     }
 
@@ -248,20 +246,14 @@ server.registerTool(
 
     if (features.length === 0) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: `No active alerts for ${stateCode}`,
-        }],
+        structuredContent: { state: stateCode, alerts: [], message: `No active alerts for ${stateCode}` },
       };
     }
 
     const formattedAlerts = features.map(formatAlert);
 
     return {
-      content: [{
-        type: 'text' as const,
-        text: `Active alerts for ${stateCode}:\n\n${formattedAlerts.join('\n')}`,
-      }],
+      structuredContent: { state: stateCode, alerts: formattedAlerts },
     };
   },
 );
@@ -285,20 +277,16 @@ server.registerTool(
 
     if (!pointsData) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: `Failed to retrieve grid point data for coordinates: ${latitude}, ${longitude}. This location may not be supported by the NWS API (only US locations are supported).`,
-        }],
+        errorMessage: `Failed to retrieve grid point data for coordinates: ${latitude}, ${longitude}. This location may not be supported by the NWS API (only US locations are supported).`,
+        isError: true as const,
       };
     }
 
     const forecastUrl = pointsData.properties?.forecast;
     if (!forecastUrl) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: 'Failed to get forecast URL from grid point data',
-        }],
+        errorMessage: 'Failed to get forecast URL from grid point data',
+        isError: true as const,
       };
     }
 
@@ -306,39 +294,31 @@ server.registerTool(
     const forecastData = await makeNWSRequest<ForecastResponse>(forecastUrl);
     if (!forecastData) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: 'Failed to retrieve forecast data',
-        }],
+        errorMessage: 'Failed to retrieve forecast data',
+        isError: true as const,
       };
     }
 
     const periods = forecastData.properties?.periods || [];
     if (periods.length === 0) {
       return {
-        content: [{
-          type: 'text' as const,
-          text: 'No forecast periods available',
-        }],
+        structuredContent: { latitude, longitude, periods: [], message: 'No forecast periods available' },
       };
     }
 
-    // Format forecast periods
-    const formattedForecast = periods.map((period: ForecastPeriod) =>
-      [
-        `${period.name || 'Unknown'}:`,
-        `Temperature: ${period.temperature || 'Unknown'}°${period.temperatureUnit || 'F'}`,
-        `Wind: ${period.windSpeed || 'Unknown'} ${period.windDirection || ''}`,
-        `${period.shortForecast || 'No forecast available'}`,
-        '---',
-      ].join('\n'),
-    );
-
     return {
-      content: [{
-        type: 'text' as const,
-        text: `Forecast for ${latitude}, ${longitude}:\n\n${formattedForecast.join('\n')}`,
-      }],
+      structuredContent: {
+        latitude,
+        longitude,
+        periods: periods.map((period: ForecastPeriod) => ({
+          name: period.name || 'Unknown',
+          temperature: period.temperature,
+          temperatureUnit: period.temperatureUnit || 'F',
+          windSpeed: period.windSpeed,
+          windDirection: period.windDirection,
+          shortForecast: period.shortForecast || 'No forecast available',
+        })),
+      },
     };
   },
 );

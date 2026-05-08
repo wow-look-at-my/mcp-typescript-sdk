@@ -17,6 +17,7 @@ import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
 
 import { InMemoryEventStore } from './inMemoryEventStore.js';
+import { sleep } from './utils.js';
 
 // Check for OAuth flag
 const useOAuth = process.argv.includes('--oauth');
@@ -56,16 +57,9 @@ const getServer = () => {
                 name: z.string().describe('Name to greet')
             })
         },
-        async ({ name }): Promise<CallToolResult> => {
-            return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Hello, ${name}!`
-                    }
-                ]
-            };
-        }
+        async ({ name }) => ({
+            structuredContent: { message: `Hello, ${name}!` }
+        })
     );
 
     // Register a tool that sends multiple greetings with notifications (with annotations)
@@ -82,9 +76,7 @@ const getServer = () => {
                 openWorldHint: false
             }
         },
-        async ({ name }, ctx): Promise<CallToolResult> => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
-
+        async ({ name }, ctx) => {
             await ctx.mcpReq.log('debug', `Starting multi-greet for ${name}`);
 
             await sleep(1000); // Wait 1 second before first greeting
@@ -96,12 +88,7 @@ const getServer = () => {
             await ctx.mcpReq.log('info', `Sending second greeting to ${name}`);
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Good morning, ${name}!`
-                    }
-                ]
+                structuredContent: { message: `Good morning, ${name}!` }
             };
         }
     );
@@ -115,7 +102,7 @@ const getServer = () => {
                 infoType: z.enum(['contact', 'preferences', 'feedback']).describe('Type of information to collect')
             })
         },
-        async ({ infoType }, ctx): Promise<CallToolResult> => {
+        async ({ infoType }, ctx) => {
             let message: string;
             let requestedSchema: {
                 type: 'object';
@@ -226,40 +213,21 @@ const getServer = () => {
 
                 if (result.action === 'accept') {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Thank you! Collected ${infoType} information: ${JSON.stringify(result.content, null, 2)}`
-                            }
-                        ]
+                        structuredContent: { status: 'collected', infoType, data: result.content }
                     };
                 } else if (result.action === 'decline') {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `No information was collected. User declined ${infoType} information request.`
-                            }
-                        ]
+                        structuredContent: { status: 'declined', infoType }
                     };
                 } else {
                     return {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Information collection was cancelled by the user.`
-                            }
-                        ]
+                        structuredContent: { status: 'cancelled', infoType }
                     };
                 }
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Error collecting ${infoType} information: ${error}`
-                        }
-                    ]
+                    errorMessage: `Error collecting ${infoType} information: ${error}`,
+                    isError: true
                 };
             }
         }
@@ -300,8 +268,7 @@ const getServer = () => {
                 count: z.number().describe('Number of notifications to send (0 for 100)').default(50)
             })
         },
-        async ({ interval, count }, ctx): Promise<CallToolResult> => {
-            const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+        async ({ interval, count }, ctx) => {
             let counter = 0;
 
             while (count === 0 || counter < count) {
@@ -316,12 +283,7 @@ const getServer = () => {
             }
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Started sending periodic notifications every ${interval}ms`
-                    }
-                ]
+                structuredContent: { message: `Started sending periodic notifications every ${interval}ms` }
             };
         }
     );
@@ -389,6 +351,9 @@ const getServer = () => {
     );
 
     // Register a tool that returns ResourceLinks
+    // NOTE: To return ResourceLink content items via McpServer.registerTool, use the low-level
+    // Server.setRequestHandler API instead (see serverGuide.examples.ts for an example).
+    // Here we demonstrate returning structured data about the links.
     server.registerTool(
         'list-files',
         {
@@ -398,24 +363,21 @@ const getServer = () => {
                 includeDescriptions: z.boolean().optional().describe('Whether to include descriptions in the resource links')
             })
         },
-        async ({ includeDescriptions = true }): Promise<CallToolResult> => {
-            const resourceLinks: ResourceLink[] = [
+        async ({ includeDescriptions = true }) => {
+            const resourceLinks: Omit<ResourceLink, 'type'>[] = [
                 {
-                    type: 'resource_link',
                     uri: 'https://example.com/greetings/default',
                     name: 'Default Greeting',
                     mimeType: 'text/plain',
                     ...(includeDescriptions && { description: 'A simple greeting resource' })
                 },
                 {
-                    type: 'resource_link',
                     uri: 'file:///example/file1.txt',
                     name: 'Example File 1',
                     mimeType: 'text/plain',
                     ...(includeDescriptions && { description: 'First example file for ResourceLink demonstration' })
                 },
                 {
-                    type: 'resource_link',
                     uri: 'file:///example/file2.txt',
                     name: 'Example File 2',
                     mimeType: 'text/plain',
@@ -424,17 +386,7 @@ const getServer = () => {
             ];
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Here are the available files as resource links:'
-                    },
-                    ...resourceLinks,
-                    {
-                        type: 'text',
-                        text: '\nYou can read any of these resources using their URI.'
-                    }
-                ]
+                structuredContent: { resourceLinks }
             };
         }
     );
@@ -461,12 +413,7 @@ const getServer = () => {
                 (async () => {
                     await new Promise(resolve => setTimeout(resolve, duration));
                     await ctx.task.store.storeTaskResult(task.taskId, 'completed', {
-                        content: [
-                            {
-                                type: 'text',
-                                text: `Completed ${duration}ms delay`
-                            }
-                        ]
+                        structuredContent: { message: `Completed ${duration}ms delay` }
                     });
                 })();
 
@@ -570,12 +517,12 @@ const getServer = () => {
                         }
 
                         await taskStore.storeTaskResult(task.taskId, 'completed', {
-                            content: [{ type: 'text', text: resultText }]
+                            structuredContent: { message: resultText }
                         });
                     } catch (error) {
                         console.error('Error in collect-user-info-task:', error);
                         await taskStore.storeTaskResult(task.taskId, 'failed', {
-                            content: [{ type: 'text', text: `Error: ${error}` }],
+                            errorMessage: `Error: ${error}`,
                             isError: true
                         });
                     }

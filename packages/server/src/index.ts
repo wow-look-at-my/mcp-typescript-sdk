@@ -13,6 +13,7 @@ export type {
     BaseToolCallback,
     CompleteResourceTemplateCallback,
     ListResourcesCallback,
+    MediaContentBlock,
     PromptCallback,
     ReadResourceCallback,
     ReadResourceTemplateCallback,
@@ -21,7 +22,11 @@ export type {
     RegisteredResourceTemplate,
     RegisteredTool,
     ResourceMetadata,
-    ToolCallback
+    ToolCallback,
+    ToolErrorResult,
+    ToolHandlerResult,
+    UserContentBlock,
+    UserToolResult
 } from './server/mcp.js';
 export { McpServer, ResourceTemplate } from './server/mcp.js';
 export type { HostHeaderValidationResult } from './server/middleware/hostHeaderValidation.js';

@@ -388,6 +388,10 @@ const sdkTypeChecks = {
         sdk = spec;
         spec = sdk;
     },
+    JsonContent: (sdk: SDKTypes.JsonContent, spec: SpecTypes.JsonContent) => {
+        sdk = spec;
+        spec = sdk;
+    },
     AudioContent: (sdk: SDKTypes.AudioContent, spec: SpecTypes.AudioContent) => {
         sdk = spec;
         spec = sdk;
@@ -863,6 +867,7 @@ type _K_ListPromptsResult = Assert<AssertExactKeys<SDKTypes.ListPromptsResult, S
 type _K_GetPromptResult = Assert<AssertExactKeys<SDKTypes.GetPromptResult, SpecTypes.GetPromptResult>>;
 type _K_TextContent = Assert<AssertExactKeys<SDKTypes.TextContent, SpecTypes.TextContent>>;
 type _K_ImageContent = Assert<AssertExactKeys<SDKTypes.ImageContent, SpecTypes.ImageContent>>;
+type _K_JsonContent = Assert<AssertExactKeys<SDKTypes.JsonContent, SpecTypes.JsonContent>>;
 type _K_AudioContent = Assert<AssertExactKeys<SDKTypes.AudioContent, SpecTypes.AudioContent>>;
 type _K_EmbeddedResource = Assert<AssertExactKeys<SDKTypes.EmbeddedResource, SpecTypes.EmbeddedResource>>;
 type _K_ResourceLink = Assert<AssertExactKeys<SDKTypes.ResourceLink, SpecTypes.ResourceLink>>;
@@ -1086,7 +1091,7 @@ describe('Spec Types', () => {
     it('should define some expected types', () => {
         expect(specTypes).toContain('JSONRPCNotification');
         expect(specTypes).toContain('ElicitResult');
-        expect(specTypes).toHaveLength(176);
+        expect(specTypes).toHaveLength(177);
     });
 
     it('should have up to date list of missing sdk types', () => {
