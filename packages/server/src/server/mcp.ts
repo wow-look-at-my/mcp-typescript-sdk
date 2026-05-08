@@ -1173,7 +1173,7 @@ function transformToWireFormat(result: UserToolResult): CallToolResult {
         };
     }
     return {
-        content: [{ type: 'json', data: result.structuredContent }],
+        content: [{ type: 'text', text: JSON.stringify(result.structuredContent) }],
         structuredContent: result.structuredContent,
         isError: result.isError
     };

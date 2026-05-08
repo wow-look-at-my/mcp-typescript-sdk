@@ -78,7 +78,6 @@ const SPEC_SCHEMA_KEYS = [
     'IconSchema',
     'IconsSchema',
     'ImageContentSchema',
-    'JsonContentSchema',
     'ImplementationSchema',
     'InitializedNotificationSchema',
     'InitializeRequestSchema',

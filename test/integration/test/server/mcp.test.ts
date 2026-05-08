@@ -1378,12 +1378,7 @@ describe('Zod v4', () => {
                     })
                 },
                 async ({ input }) => ({
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Processed: ${input}`
-                        }
-                    ],
+                    errorMessage: `Processed: ${input}`,
                     isError: true
                 })
             );
