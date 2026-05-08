@@ -1202,12 +1202,35 @@ export const ResourceLinkSchema = ResourceSchema.extend({
 });
 
 /**
+ * JSON data provided to or from an LLM.
+ */
+export const JsonContentSchema = z.object({
+    type: z.literal('json'),
+    /**
+     * The JSON data.
+     */
+    data: z.record(z.string(), z.unknown()),
+
+    /**
+     * Optional annotations for the client.
+     */
+    annotations: AnnotationsSchema.optional(),
+
+    /**
+     * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
+     * for notes on `_meta` usage.
+     */
+    _meta: z.record(z.string(), z.unknown()).optional()
+});
+
+/**
  * A content block that can be used in prompts and tool results.
  */
 export const ContentBlockSchema = z.union([
     TextContentSchema,
     ImageContentSchema,
     AudioContentSchema,
+    JsonContentSchema,
     ResourceLinkSchema,
     EmbeddedResourceSchema
 ]);
