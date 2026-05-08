@@ -353,6 +353,9 @@ const getServer = () => {
     );
 
     // Register a tool that returns ResourceLinks
+    // NOTE: To return ResourceLink content items via McpServer.registerTool, use the low-level
+    // Server.setRequestHandler API instead (see serverGuide.examples.ts for an example).
+    // Here we demonstrate returning structured data about the links.
     server.registerTool(
         'list-files',
         {
@@ -362,24 +365,21 @@ const getServer = () => {
                 includeDescriptions: z.boolean().optional().describe('Whether to include descriptions in the resource links')
             })
         },
-        async ({ includeDescriptions = true }): Promise<CallToolResult> => {
-            const resourceLinks: ResourceLink[] = [
+        async ({ includeDescriptions = true }) => {
+            const resourceLinks: Omit<ResourceLink, 'type'>[] = [
                 {
-                    type: 'resource_link',
                     uri: 'https://example.com/greetings/default',
                     name: 'Default Greeting',
                     mimeType: 'text/plain',
                     ...(includeDescriptions && { description: 'A simple greeting resource' })
                 },
                 {
-                    type: 'resource_link',
                     uri: 'file:///example/file1.txt',
                     name: 'Example File 1',
                     mimeType: 'text/plain',
                     ...(includeDescriptions && { description: 'First example file for ResourceLink demonstration' })
                 },
                 {
-                    type: 'resource_link',
                     uri: 'file:///example/file2.txt',
                     name: 'Example File 2',
                     mimeType: 'text/plain',
@@ -388,17 +388,7 @@ const getServer = () => {
             ];
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Here are the available files as resource links:'
-                    },
-                    ...resourceLinks,
-                    {
-                        type: 'text',
-                        text: '\nYou can read any of these resources using their URI.'
-                    }
-                ]
+                structuredContent: { resourceLinks }
             };
         }
     );
