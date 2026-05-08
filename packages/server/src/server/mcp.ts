@@ -1122,8 +1122,8 @@ export type InferRawShape<S extends ZodRawShape> = z.infer<z.ZodObject<S>>;
 
 /** {@linkcode ToolCallback} variant used when `inputSchema` is a {@linkcode ZodRawShape}. */
 export type LegacyToolCallback<Args extends ZodRawShape | undefined> = Args extends ZodRawShape
-    ? (args: InferRawShape<Args>, ctx: ServerContext) => CallToolResult | Promise<CallToolResult>
-    : (ctx: ServerContext) => CallToolResult | Promise<CallToolResult>;
+    ? (args: InferRawShape<Args>, ctx: ServerContext) => UserToolResult | Promise<UserToolResult>
+    : (ctx: ServerContext) => UserToolResult | Promise<UserToolResult>;
 
 /** {@linkcode PromptCallback} variant used when `argsSchema` is a {@linkcode ZodRawShape}. */
 export type LegacyPromptCallback<Args extends ZodRawShape | undefined> = Args extends ZodRawShape
@@ -1139,10 +1139,53 @@ export type BaseToolCallback<
     : (ctx: Ctx) => SendResultT | Promise<SendResultT>;
 
 /**
+ * The result type that tool handlers should return when the tool succeeds.
+ * The SDK will automatically generate the `content` field for wire transmission.
+ */
+export type ToolHandlerResult = {
+    structuredContent: { [key: string]: unknown };
+    isError?: boolean;
+};
+
+/**
+ * Result for tools that return an error message.
+ */
+export type ToolErrorResult = {
+    errorMessage: string;
+    isError: true;
+};
+
+/**
+ * Union of valid tool handler return types.
+ * Tool handlers should return either:
+ * - `ToolHandlerResult` with `structuredContent` for successful results
+ * - `ToolErrorResult` with `errorMessage` for error conditions
+ */
+export type UserToolResult = ToolHandlerResult | ToolErrorResult;
+
+/**
+ * Transforms a UserToolResult (what handlers return) into a CallToolResult (wire format).
+ * Auto-generates the `content` field from structuredContent.
+ */
+function transformToWireFormat(result: UserToolResult): CallToolResult {
+    if ('errorMessage' in result) {
+        return {
+            content: [{ type: 'text', text: result.errorMessage }],
+            isError: true
+        };
+    }
+    return {
+        content: [{ type: 'json', data: result.structuredContent }],
+        structuredContent: result.structuredContent,
+        isError: result.isError
+    };
+}
+
+/**
  * Callback for a tool handler registered with {@linkcode McpServer.registerTool}.
  */
 export type ToolCallback<Args extends StandardSchemaWithJSON | undefined = undefined> = BaseToolCallback<
-    CallToolResult,
+    UserToolResult,
     ServerContext,
     Args
 >;
@@ -1213,12 +1256,12 @@ function createToolExecutor(
 
     if (inputSchema) {
         const callback = handler as ToolCallbackInternal;
-        return async (args, ctx) => callback(args, ctx);
+        return async (args, ctx) => transformToWireFormat(await callback(args, ctx));
     }
 
     // When no inputSchema, call with just ctx (the handler expects (ctx) signature)
-    const callback = handler as (ctx: ServerContext) => CallToolResult | Promise<CallToolResult>;
-    return async (_args, ctx) => callback(ctx);
+    const callback = handler as (ctx: ServerContext) => UserToolResult | Promise<UserToolResult>;
+    return async (_args, ctx) => transformToWireFormat(await callback(ctx));
 }
 
 const EMPTY_OBJECT_JSON_SCHEMA = {
@@ -1298,7 +1341,7 @@ export type PromptCallback<Args extends StandardSchemaWithJSON | undefined = und
  */
 type PromptHandler = (args: Record<string, unknown> | undefined, ctx: ServerContext) => Promise<GetPromptResult>;
 
-type ToolCallbackInternal = (args: unknown, ctx: ServerContext) => CallToolResult | Promise<CallToolResult>;
+type ToolCallbackInternal = (args: unknown, ctx: ServerContext) => UserToolResult | Promise<UserToolResult>;
 
 type TaskHandlerInternal = {
     createTask: (args: unknown, ctx: CreateTaskServerContext) => CreateTaskResult | Promise<CreateTaskResult>;

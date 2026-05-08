@@ -2302,9 +2302,30 @@ export interface Annotations {
 }
 
 /**
+ * JSON data provided to or from an LLM.
+ *
  * @category Content
  */
-export type ContentBlock = TextContent | ImageContent | AudioContent | ResourceLink | EmbeddedResource;
+export interface JsonContent {
+    type: 'json';
+
+    /**
+     * The JSON data.
+     */
+    data: { [key: string]: unknown };
+
+    /**
+     * Optional annotations for the client.
+     */
+    annotations?: Annotations;
+
+    _meta?: MetaObject;
+}
+
+/**
+ * @category Content
+ */
+export type ContentBlock = TextContent | ImageContent | AudioContent | JsonContent | ResourceLink | EmbeddedResource;
 
 /**
  * Text provided to or from an LLM.

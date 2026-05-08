@@ -21,7 +21,10 @@ export type {
     RegisteredResourceTemplate,
     RegisteredTool,
     ResourceMetadata,
-    ToolCallback
+    ToolCallback,
+    ToolErrorResult,
+    ToolHandlerResult,
+    UserToolResult
 } from './server/mcp.js';
 export { McpServer, ResourceTemplate } from './server/mcp.js';
 export type { HostHeaderValidationResult } from './server/middleware/hostHeaderValidation.js';

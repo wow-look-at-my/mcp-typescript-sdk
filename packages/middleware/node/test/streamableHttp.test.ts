@@ -167,8 +167,8 @@ describe('Zod v4', () => {
                 description: 'A simple greeting tool',
                 inputSchema: z.object({ name: z.string().describe('Name to greet') })
             },
-            async ({ name }): Promise<CallToolResult> => {
-                return { content: [{ type: 'text', text: `Hello, ${name}!` }] };
+            async ({ name }) => {
+                return { structuredContent: { greeting: `Hello, ${name}!` } };
             }
         );
 
@@ -214,9 +214,9 @@ describe('Zod v4', () => {
                 description: 'A user profile data tool',
                 inputSchema: z.object({ active: z.boolean().describe('Profile status') })
             },
-            async ({ active }, ctx): Promise<CallToolResult> => {
+            async ({ active }, ctx) => {
                 return {
-                    content: [{ type: 'text', text: `${active ? 'Active' : 'Inactive'} profile from token: ${ctx.http?.authInfo?.token}!` }]
+                    structuredContent: { status: active ? 'Active' : 'Inactive', token: ctx.http?.authInfo?.token }
                 };
             }
         );
@@ -382,12 +382,8 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Hello, Test User!'
-                        }
-                    ]
+                    content: [{ type: 'json', data: { greeting: 'Hello, Test User!' } }],
+                    structuredContent: { greeting: 'Hello, Test User!' }
                 },
                 id: 'call-1'
             });
@@ -405,18 +401,15 @@ describe('Zod v4', () => {
                     description: 'A simple test tool with request info',
                     inputSchema: z.object({ name: z.string().describe('Name to greet') })
                 },
-                async ({ name }, ctx): Promise<CallToolResult> => {
+                async ({ name }, ctx) => {
                     const req = ctx.http?.req;
-                    const serializedRequestInfo = {
+                    const requestInfo = {
                         headers: Object.fromEntries(req?.headers ?? new Headers()),
                         url: req?.url,
                         method: req?.method
                     };
                     return {
-                        content: [
-                            { type: 'text', text: `Hello, ${name}!` },
-                            { type: 'text', text: `${JSON.stringify(serializedRequestInfo)}` }
-                        ]
+                        structuredContent: { greeting: `Hello, ${name}!`, requestInfo }
                     };
                 }
             );
@@ -446,15 +439,13 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [
-                        { type: 'text', text: 'Hello, Test User!' },
-                        { type: 'text', text: expect.any(String) }
-                    ]
+                    content: [{ type: 'json', data: expect.any(Object) }],
+                    structuredContent: expect.any(Object)
                 },
                 id: 'call-1'
             });
 
-            const requestInfo = JSON.parse(eventData.result.content[1].text);
+            const requestInfo = eventData.result.structuredContent.requestInfo;
             expect(requestInfo).toMatchObject({
                 headers: {
                     'content-type': 'application/json',
@@ -480,12 +471,12 @@ describe('Zod v4', () => {
                     description: 'A tool that reads query params',
                     inputSchema: z.object({})
                 },
-                async (_args, ctx): Promise<CallToolResult> => {
+                async (_args, ctx) => {
                     const req = ctx.http?.req;
                     const url = new URL(req!.url);
                     const params = Object.fromEntries(url.searchParams);
                     return {
-                        content: [{ type: 'text', text: JSON.stringify(params) }]
+                        structuredContent: { params }
                     };
                 }
             );
@@ -1089,12 +1080,8 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Active profile from token: test-token!'
-                        }
-                    ]
+                    content: [{ type: 'json', data: { status: 'Active', token: 'test-token' } }],
+                    structuredContent: { status: 'Active', token: 'test-token' }
                 },
                 id: 'call-1'
             });
@@ -1125,12 +1112,8 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [
-                        {
-                            type: 'text',
-                            text: 'Inactive profile from token: undefined!'
-                        }
-                    ]
+                    content: [{ type: 'json', data: { status: 'Inactive', token: undefined } }],
+                    structuredContent: { status: 'Inactive', token: undefined }
                 },
                 id: 'call-1'
             });
@@ -1217,7 +1200,8 @@ describe('Zod v4', () => {
                     jsonrpc: '2.0',
                     id: 'batch-2',
                     result: expect.objectContaining({
-                        content: expect.arrayContaining([expect.objectContaining({ type: 'text', text: 'Hello, JSON!' })])
+                        content: expect.arrayContaining([expect.objectContaining({ type: 'json', data: { greeting: 'Hello, JSON!' } })]),
+                        structuredContent: { greeting: 'Hello, JSON!' }
                     })
                 })
             );
@@ -1908,7 +1892,7 @@ describe('Zod v4', () => {
 
                 // Wait before returning so we can observe the stream closure
                 await toolCompletePromise;
-                return { content: [{ type: 'text', text: 'Done' }] };
+                return { structuredContent: { status: 'Done' } };
             });
 
             // Initialize to get session ID
@@ -1971,7 +1955,7 @@ describe('Zod v4', () => {
             // Register a tool that captures the ctx.http?.closeSSE callback
             mcpServer.registerTool('test-callback-tool', { description: 'Test tool' }, async ctx => {
                 receivedCloseSSEStream = ctx.http?.closeSSE;
-                return { content: [{ type: 'text', text: 'Done' }] };
+                return { structuredContent: { status: 'Done' } };
             });
 
             // Initialize to get session ID
@@ -2031,7 +2015,7 @@ describe('Zod v4', () => {
             mcpServer.registerTool('test-old-version-tool', { description: 'Test tool' }, async ctx => {
                 receivedCloseSSEStream = ctx.http?.closeSSE;
                 receivedCloseStandaloneSSEStream = ctx.http?.closeStandaloneSSE;
-                return { content: [{ type: 'text', text: 'Done' }] };
+                return { structuredContent: { status: 'Done' } };
             });
 
             // Initialize with OLD protocol version to get session ID
@@ -2089,7 +2073,7 @@ describe('Zod v4', () => {
             // Register a tool that captures the ctx.http?.closeSSE callback
             mcpServer.registerTool('test-no-callback-tool', { description: 'Test tool' }, async ctx => {
                 receivedCloseSSEStream = ctx.http?.closeSSE;
-                return { content: [{ type: 'text', text: 'Done' }] };
+                return { structuredContent: { status: 'Done' } };
             });
 
             // Initialize to get session ID
@@ -2146,7 +2130,7 @@ describe('Zod v4', () => {
             // Register a tool that captures the ctx.http?.closeStandaloneSSE callback
             mcpServer.registerTool('test-standalone-callback-tool', { description: 'Test tool' }, async ctx => {
                 receivedCloseStandaloneSSEStream = ctx.http?.closeStandaloneSSE;
-                return { content: [{ type: 'text', text: 'Done' }] };
+                return { structuredContent: { status: 'Done' } };
             });
 
             // Initialize to get session ID
@@ -2201,7 +2185,7 @@ describe('Zod v4', () => {
             // Register a tool that closes the standalone SSE stream via ctx callback
             mcpServer.registerTool('close-standalone-stream-tool', { description: 'Closes standalone stream' }, async ctx => {
                 ctx.http?.closeStandaloneSSE?.();
-                return { content: [{ type: 'text', text: 'Stream closed' }] };
+                return { structuredContent: { status: 'Stream closed' } };
             });
 
             // Initialize to get session ID
@@ -2282,7 +2266,7 @@ describe('Zod v4', () => {
             // Register a tool that closes the standalone SSE stream
             mcpServer.registerTool('close-standalone-for-reconnect', { description: 'Closes standalone stream' }, async ctx => {
                 ctx.http?.closeStandaloneSSE?.();
-                return { content: [{ type: 'text', text: 'Stream closed' }] };
+                return { structuredContent: { status: 'Stream closed' } };
             });
 
             // Initialize to get session ID
