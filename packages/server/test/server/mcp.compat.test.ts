@@ -114,9 +114,10 @@ describe('registerTool/registerPrompt accept raw Zod shape (auto-wrapped)', () =
 
         expect(received).toEqual({ x: 7 });
         const result = responses.find(r => 'id' in r && r.id === 2) as {
-            result?: { content: Array<{ type: string; data?: unknown }>; structuredContent?: { value: number } };
+            result?: { content: Array<{ type: string; text?: string }>; structuredContent?: { value: number } };
         };
-        expect(result.result?.content[0]?.type).toBe('json');
+        expect(result.result?.content[0]?.type).toBe('text');
+        expect(result.result?.content[0]?.text).toBe(JSON.stringify({ value: 7 }));
         expect(result.result?.structuredContent?.value).toBe(7);
 
         await server.close();

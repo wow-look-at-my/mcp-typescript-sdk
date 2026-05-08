@@ -1,14 +1,19 @@
 import type {
+    AudioContent,
     BaseMetadata,
     CallToolRequest,
     CallToolResult,
     CompleteRequestPrompt,
     CompleteRequestResourceTemplate,
     CompleteResult,
+    ContentBlock,
     CreateTaskResult,
     CreateTaskServerContext,
+    EmbeddedResource,
     GetPromptResult,
+    ImageContent,
     Implementation,
+    JsonContent,
     ListPromptsResult,
     ListResourcesResult,
     ListToolsResult,
@@ -17,10 +22,12 @@ import type {
     PromptReference,
     ReadResourceResult,
     Resource,
+    ResourceLink,
     ResourceTemplateReference,
     Result,
     ServerContext,
     StandardSchemaWithJSON,
+    TextContent,
     Tool,
     ToolAnnotations,
     ToolExecution,
@@ -1137,10 +1144,22 @@ export type BaseToolCallback<
     : (ctx: Ctx) => SendResultT | Promise<SendResultT>;
 
 /**
+ * Media content types allowed in user-facing API (image, audio, embedded resource, resource link).
+ */
+export type MediaContentBlock = ImageContent | AudioContent | EmbeddedResource | ResourceLink;
+
+/**
+ * User-facing content blocks: json OR media types. `type: 'text'` is NOT allowed.
+ * Json blocks are converted to text blocks before wire transmission.
+ */
+export type UserContentBlock = JsonContent | MediaContentBlock;
+
+/**
  * The result type that tool handlers should return when the tool succeeds.
  * The SDK will automatically generate the `content` field for wire transmission.
  */
 export type ToolHandlerResult = {
+    content?: UserContentBlock[];
     structuredContent: { [key: string]: unknown };
     isError?: boolean;
 };
@@ -1162,8 +1181,22 @@ export type ToolErrorResult = {
 export type UserToolResult = ToolHandlerResult | ToolErrorResult;
 
 /**
+ * Transforms user-facing content blocks to spec-compliant wire format.
+ * Converts `type: 'json'` to `type: 'text'` with JSON.stringify.
+ */
+function transformContentForWire(content: UserContentBlock[]): ContentBlock[] {
+    return content.map(block => {
+        if (block.type === 'json') {
+            return { type: 'text', text: JSON.stringify(block.data) } as TextContent;
+        }
+        return block;
+    });
+}
+
+/**
  * Transforms a UserToolResult (what handlers return) into a CallToolResult (wire format).
- * Auto-generates the `content` field from structuredContent.
+ * Auto-generates the `content` field from structuredContent if not provided.
+ * Converts any `type: 'json'` blocks to `type: 'text'` for spec compliance.
  */
 function transformToWireFormat(result: UserToolResult): CallToolResult {
     if ('errorMessage' in result) {
@@ -1172,8 +1205,13 @@ function transformToWireFormat(result: UserToolResult): CallToolResult {
             isError: true
         };
     }
+
+    const wireContent = result.content
+        ? transformContentForWire(result.content)
+        : [{ type: 'text', text: JSON.stringify(result.structuredContent) } as TextContent];
+
     return {
-        content: [{ type: 'text', text: JSON.stringify(result.structuredContent) }],
+        content: wireContent,
         structuredContent: result.structuredContent,
         isError: result.isError
     };

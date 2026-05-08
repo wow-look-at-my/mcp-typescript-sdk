@@ -1062,38 +1062,26 @@ export const GetPromptRequestSchema = RequestSchema.extend({
 });
 
 /**
- * Checks if text looks like stringified JSON (starts+ends with matching {} or []).
- */
-function looksLikeStringifiedJson(text: string): boolean {
-    const trimmed = text.trim();
-    return (trimmed.startsWith('{') && trimmed.endsWith('}')) || (trimmed.startsWith('[') && trimmed.endsWith(']'));
-}
-
-/**
  * Text provided to or from an LLM.
  */
-export const TextContentSchema = z
-    .object({
-        type: z.literal('text'),
-        /**
-         * The text content of the message.
-         */
-        text: z.string(),
+export const TextContentSchema = z.object({
+    type: z.literal('text'),
+    /**
+     * The text content of the message.
+     */
+    text: z.string(),
 
-        /**
-         * Optional annotations for the client.
-         */
-        annotations: AnnotationsSchema.optional(),
+    /**
+     * Optional annotations for the client.
+     */
+    annotations: AnnotationsSchema.optional(),
 
-        /**
-         * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
-         * for notes on `_meta` usage.
-         */
-        _meta: z.record(z.string(), z.unknown()).optional()
-    })
-    .refine((content) => !looksLikeStringifiedJson(content.text), {
-        message: 'TextContent text looks like stringified JSON. Use JsonContent with type: "json" instead.'
-    });
+    /**
+     * See [MCP specification](https://github.com/modelcontextprotocol/modelcontextprotocol/blob/47339c03c143bb4ec01a26e721a1b8fe66634ebe/docs/specification/draft/basic/index.mdx#general-fields)
+     * for notes on `_meta` usage.
+     */
+    _meta: z.record(z.string(), z.unknown()).optional()
+});
 
 /**
  * An image provided to or from an LLM.

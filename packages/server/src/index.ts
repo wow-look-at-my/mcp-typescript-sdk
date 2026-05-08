@@ -13,6 +13,7 @@ export type {
     BaseToolCallback,
     CompleteResourceTemplateCallback,
     ListResourcesCallback,
+    MediaContentBlock,
     PromptCallback,
     ReadResourceCallback,
     ReadResourceTemplateCallback,
@@ -24,6 +25,7 @@ export type {
     ToolCallback,
     ToolErrorResult,
     ToolHandlerResult,
+    UserContentBlock,
     UserToolResult
 } from './server/mcp.js';
 export { McpServer, ResourceTemplate } from './server/mcp.js';

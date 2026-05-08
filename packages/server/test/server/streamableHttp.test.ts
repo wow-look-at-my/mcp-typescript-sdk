@@ -260,7 +260,7 @@ describe('Zod v4', () => {
                 expect(eventData).toMatchObject({
                     jsonrpc: '2.0',
                     result: {
-                        content: [{ type: 'json', data: { greeting: 'Hello, Test User!' } }],
+                        content: [{ type: 'text', text: JSON.stringify({ greeting: 'Hello, Test User!' }) }],
                         structuredContent: { greeting: 'Hello, Test User!' }
                     },
                     id: 'call-1'
@@ -550,7 +550,7 @@ describe('Zod v4', () => {
             expect(data).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: { greeting: 'Hello, World!' } }],
+                    content: [{ type: 'text', text: JSON.stringify({ greeting: 'Hello, World!' }) }],
                     structuredContent: { greeting: 'Hello, World!' }
                 },
                 id: 'call-1'

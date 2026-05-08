@@ -540,8 +540,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Updated response' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Updated response' })
                 }
             ]);
 
@@ -620,8 +620,8 @@ describe('Zod v4', () => {
 
             expect(callResult.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Updated: test, 42' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Updated: test, 42' })
                 }
             ]);
 
@@ -1284,9 +1284,9 @@ describe('Zod v4', () => {
             // Content is auto-generated as JsonContent from structuredContent
             expect(result.content).toBeDefined();
             expect(result.content!).toHaveLength(1);
-            expect(result.content![0]).toMatchObject({ type: 'json' });
-            const jsonContent = result.content![0] as { type: 'json'; data: unknown };
-            expect(jsonContent.data).toEqual(result.structuredContent);
+            expect(result.content![0]).toMatchObject({ type: 'text' });
+            const textContent = result.content![0] as { type: 'text'; text: string };
+            expect(JSON.parse(textContent.text)).toEqual(result.structuredContent);
         });
 
         /***
@@ -1550,14 +1550,12 @@ describe('Zod v4', () => {
 
             expect(receivedRequestId).toBeDefined();
             expect(typeof receivedRequestId === 'string' || typeof receivedRequestId === 'number').toBe(true);
-            expect(result.content).toEqual(
-                expect.arrayContaining([
-                    {
-                        type: 'json',
-                        data: expect.objectContaining({ message: expect.stringContaining('Received request ID:') })
-                    }
-                ])
-            );
+            expect(result.content).toBeDefined();
+            expect(result.content!.length).toBe(1);
+            const textContent = result.content![0] as { type: 'text'; text: string };
+            expect(textContent.type).toBe('text');
+            const parsed = JSON.parse(textContent.text);
+            expect(parsed.message).toContain('Received request ID:');
         });
 
         /***
@@ -1648,8 +1646,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Processed: hello' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Processed: hello' })
                 }
             ]);
         });
@@ -4740,8 +4738,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).toHaveBeenCalledWith('ABC Restaurant', '2024-12-25', 2, 'same_week');
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' })
                 }
             ]);
         });
@@ -4778,8 +4776,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'No booking made. Original date not available.' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'No booking made. Original date not available.' })
                 }
             ]);
         });
@@ -4813,8 +4811,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'No booking made. Original date not available.' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'No booking made. Original date not available.' })
                 }
             ]);
         });
@@ -4861,8 +4859,8 @@ describe('Zod v4', () => {
 
             expect(emailResult.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Email contact: test@example.com' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Email contact: test@example.com' })
                 }
             ]);
 
@@ -4876,8 +4874,8 @@ describe('Zod v4', () => {
 
             expect(phoneResult.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Phone contact: +1234567890' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Phone contact: +1234567890' })
                 }
             ]);
         });
@@ -4918,8 +4916,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'User: 123, John Doe, 30 years old' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'User: 123, John Doe, 30 years old' })
                 }
             ]);
         });
@@ -4970,8 +4968,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Processed: HELLO, 10, WORLD' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Processed: HELLO, 10, WORLD' })
                 }
             ]);
         });
@@ -5067,8 +5065,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Hello, World!' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Hello, World!' })
                 }
             ]);
         });
@@ -5112,8 +5110,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Full name: John Doe' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Full name: John Doe' })
                 }
             ]);
         });
@@ -5152,8 +5150,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Value: test, Processed: true' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Value: test, Processed: true' })
                 }
             ]);
         });
@@ -5210,8 +5208,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'items: 5 -> 10' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'items: 5 -> 10' })
                 }
             ]);
         });
@@ -5973,8 +5971,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).toHaveBeenCalledWith('ABC Restaurant', '2024-12-25', 2, 'same_week');
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Found these alternatives: 2024-12-26, 2024-12-27, 2024-12-28' })
                 }
             ]);
         });
@@ -6011,8 +6009,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'No booking made. Original date not available.' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'No booking made. Original date not available.' })
                 }
             ]);
         });
@@ -6046,8 +6044,8 @@ describe('Zod v4', () => {
             expect(findAlternatives).not.toHaveBeenCalled();
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'No booking made. Original date not available.' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'No booking made. Original date not available.' })
                 }
             ]);
         });
@@ -6094,8 +6092,8 @@ describe('Zod v4', () => {
 
             expect(emailResult.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Email contact: test@example.com' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Email contact: test@example.com' })
                 }
             ]);
 
@@ -6109,8 +6107,8 @@ describe('Zod v4', () => {
 
             expect(phoneResult.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Phone contact: +1234567890' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Phone contact: +1234567890' })
                 }
             ]);
         });
@@ -6151,8 +6149,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'User: 123, John Doe, 30 years old' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'User: 123, John Doe, 30 years old' })
                 }
             ]);
         });
@@ -6203,8 +6201,8 @@ describe('Zod v4', () => {
 
             expect(result.content).toEqual([
                 {
-                    type: 'json',
-                    data: { message: 'Processed: HELLO, 10, WORLD' }
+                    type: 'text',
+                    text: JSON.stringify({ message: 'Processed: HELLO, 10, WORLD' })
                 }
             ]);
         });
@@ -6338,7 +6336,7 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'json' as const, data: { message: `Processed: ${input}` } }],
+                                content: [{ type: 'text' as const, text: JSON.stringify({ message: `Processed: ${input}` }) }],
                                 structuredContent: { message: `Processed: ${input}` }
                             });
                         }, 200);
@@ -6442,7 +6440,7 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'json' as const, data: { message: `Result: ${value * 2}` } }],
+                                content: [{ type: 'text' as const, text: JSON.stringify({ message: `Result: ${value * 2}` }) }],
                                 structuredContent: { message: `Result: ${value * 2}` }
                             });
                             releaseLatch();
@@ -6476,7 +6474,7 @@ describe('Zod v4', () => {
 
             // Should receive CallToolResult directly, not CreateTaskResult
             expect(result).toHaveProperty('content');
-            expect(result.content).toEqual([{ type: 'json' as const, data: { message: 'Result: 42' } }]);
+            expect(result.content).toEqual([{ type: 'text' as const, text: JSON.stringify({ message: 'Result: 42' }) }]);
             expect(result).not.toHaveProperty('task');
 
             // Wait for async operations to complete
@@ -6549,7 +6547,7 @@ describe('Zod v4', () => {
                         // Simulate async work
                         setTimeout(async () => {
                             await store.storeTaskResult(task.taskId, 'completed', {
-                                content: [{ type: 'json' as const, data: { message: `Completed: ${data}` } }],
+                                content: [{ type: 'text' as const, text: JSON.stringify({ message: `Completed: ${data}` }) }],
                                 structuredContent: { message: `Completed: ${data}` }
                             });
                             releaseLatch();

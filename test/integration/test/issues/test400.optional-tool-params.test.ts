@@ -53,8 +53,8 @@ describe('Issue #400: Zod v4', () => {
         expect(result.isError).toBeUndefined();
         expect(result.content).toEqual([
             {
-                type: 'json',
-                data: { message: 'limit: default, offset: default' }
+                type: 'text',
+                text: JSON.stringify({ message: 'limit: default, offset: default' })
             }
         ]);
     });

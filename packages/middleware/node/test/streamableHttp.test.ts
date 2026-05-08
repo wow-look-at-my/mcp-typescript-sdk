@@ -382,7 +382,7 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: { greeting: 'Hello, Test User!' } }],
+                    content: [{ type: 'text', text: JSON.stringify({ greeting: 'Hello, Test User!' }) }],
                     structuredContent: { greeting: 'Hello, Test User!' }
                 },
                 id: 'call-1'
@@ -439,7 +439,7 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: expect.any(Object) }],
+                    content: [{ type: 'text', text: expect.any(String) }],
                     structuredContent: expect.any(Object)
                 },
                 id: 'call-1'
@@ -504,7 +504,8 @@ describe('Zod v4', () => {
             expect(dataLine).toBeDefined();
 
             const eventData = JSON.parse(dataLine!.slice(5));
-            const queryParams = eventData.result.content[0].data.params;
+            const contentText = JSON.parse(eventData.result.content[0].text);
+            const queryParams = contentText.params;
             expect(queryParams).toEqual({ foo: 'bar', debug: 'true' });
         });
 
@@ -1080,7 +1081,7 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: { status: 'Active', token: 'test-token' } }],
+                    content: [{ type: 'text', text: JSON.stringify({ status: 'Active', token: 'test-token' }) }],
                     structuredContent: { status: 'Active', token: 'test-token' }
                 },
                 id: 'call-1'
@@ -1112,7 +1113,7 @@ describe('Zod v4', () => {
             expect(eventData).toMatchObject({
                 jsonrpc: '2.0',
                 result: {
-                    content: [{ type: 'json', data: { status: 'Inactive' } }],
+                    content: [{ type: 'text', text: JSON.stringify({ status: 'Inactive' }) }],
                     structuredContent: { status: 'Inactive' }
                 },
                 id: 'call-1'
@@ -1200,7 +1201,9 @@ describe('Zod v4', () => {
                     jsonrpc: '2.0',
                     id: 'batch-2',
                     result: expect.objectContaining({
-                        content: expect.arrayContaining([expect.objectContaining({ type: 'json', data: { greeting: 'Hello, JSON!' } })]),
+                        content: expect.arrayContaining([
+                            expect.objectContaining({ type: 'text', text: JSON.stringify({ greeting: 'Hello, JSON!' }) })
+                        ]),
                         structuredContent: { greeting: 'Hello, JSON!' }
                     })
                 })

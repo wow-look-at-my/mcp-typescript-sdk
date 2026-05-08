@@ -4,7 +4,7 @@
 client: []
 
 # This fork only supports structuredContent in tool results (auto-generates content
-# as [{ type: 'json', data: structuredContent }]). The following scenarios expect
+# as [{ type: 'text', text: JSON.stringify(structuredContent) }]). The following scenarios expect
 # specific legacy content types (text, image, audio, embedded resource) which this
 # fork no longer produces.
 server:

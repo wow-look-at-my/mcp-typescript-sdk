@@ -199,7 +199,7 @@ describe('Zod v4', () => {
                 });
 
                 // Verify tool result
-                expect(greetingResult.content).toEqual([{ type: 'json', data: { message: 'Hello, Stateless Transport!' } }]);
+                expect(greetingResult.content).toEqual([{ type: 'text', text: JSON.stringify({ message: 'Hello, Stateless Transport!' }) }]);
 
                 // Clean up
                 await transport.close();
@@ -310,7 +310,7 @@ describe('Zod v4', () => {
                 });
 
                 // Verify tool result
-                expect(greetingResult.content).toEqual([{ type: 'json', data: { message: 'Hello, Stateful Transport!' } }]);
+                expect(greetingResult.content).toEqual([{ type: 'text', text: JSON.stringify({ message: 'Hello, Stateful Transport!' }) }]);
 
                 // Clean up
                 await transport.close();
