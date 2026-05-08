@@ -12,7 +12,7 @@ import { randomUUID } from 'node:crypto';
 
 import { createMcpExpressApp } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult, ResourceLink } from '@modelcontextprotocol/server';
+import type { ResourceLink } from '@modelcontextprotocol/server';
 import { completable, McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import { StdioServerTransport } from '@modelcontextprotocol/server/stdio';
 import * as z from 'zod/v4';
@@ -65,33 +65,30 @@ function registerTool_basic(server: McpServer) {
     //#endregion registerTool_basic
 }
 
-/** Example: Tool returning resource_link content items. */
+/** Example: Tool returning resource_link content items via low-level Server API. */
 function registerTool_resourceLink(server: McpServer) {
     //#region registerTool_resourceLink
-    server.registerTool(
-        'list-files',
-        {
-            title: 'List Files',
-            description: 'Returns files as resource links without embedding content'
-        },
-        async (): Promise<CallToolResult> => {
-            const links: ResourceLink[] = [
-                {
-                    type: 'resource_link',
-                    uri: 'file:///projects/readme.md',
-                    name: 'README',
-                    mimeType: 'text/markdown'
-                },
-                {
-                    type: 'resource_link',
-                    uri: 'file:///projects/config.json',
-                    name: 'Config',
-                    mimeType: 'application/json'
-                }
-            ];
-            return { content: links };
+    // To return ResourceLink content items, use the low-level Server API
+    server.server.setRequestHandler('tools/call', async request => {
+        if (request.params.name !== 'list-files') {
+            throw new Error('Unknown tool');
         }
-    );
+        const links: ResourceLink[] = [
+            {
+                type: 'resource_link',
+                uri: 'file:///projects/readme.md',
+                name: 'README',
+                mimeType: 'text/markdown'
+            },
+            {
+                type: 'resource_link',
+                uri: 'file:///projects/config.json',
+                name: 'Config',
+                mimeType: 'application/json'
+            }
+        ];
+        return { content: links };
+    });
     //#endregion registerTool_resourceLink
 }
 
@@ -104,20 +101,20 @@ function registerTool_errorHandling(server: McpServer) {
             description: 'Fetch data from a URL',
             inputSchema: z.object({ url: z.string() })
         },
-        async ({ url }): Promise<CallToolResult> => {
+        async ({ url }) => {
             try {
                 const res = await fetch(url);
                 if (!res.ok) {
                     return {
-                        content: [{ type: 'text', text: `HTTP ${res.status}: ${res.statusText}` }],
+                        errorMessage: `HTTP ${res.status}: ${res.statusText}`,
                         isError: true
                     };
                 }
                 const text = await res.text();
-                return { content: [{ type: 'text', text }] };
+                return { structuredContent: { text, status: res.status } };
             } catch (error) {
                 return {
-                    content: [{ type: 'text', text: `Failed: ${error instanceof Error ? error.message : String(error)}` }],
+                    errorMessage: `Failed: ${error instanceof Error ? error.message : String(error)}`,
                     isError: true
                 };
             }
@@ -140,9 +137,9 @@ function registerTool_annotations(server: McpServer) {
                 idempotentHint: true
             }
         },
-        async ({ path }): Promise<CallToolResult> => {
+        async ({ path }) => {
             // ... perform deletion ...
-            return { content: [{ type: 'text', text: `Deleted ${path}` }] };
+            return { structuredContent: { deleted: path } };
         }
     );
     //#endregion registerTool_annotations
@@ -269,12 +266,12 @@ function registerTool_logging() {
             description: 'Fetch data from an API',
             inputSchema: z.object({ url: z.string() })
         },
-        async ({ url }, ctx): Promise<CallToolResult> => {
+        async ({ url }, ctx) => {
             await ctx.mcpReq.log('info', `Fetching ${url}`);
             const res = await fetch(url);
             await ctx.mcpReq.log('debug', `Response status: ${res.status}`);
             const text = await res.text();
-            return { content: [{ type: 'text', text }] };
+            return { structuredContent: { text, status: res.status } };
         }
     );
     //#endregion registerTool_logging
@@ -294,7 +291,7 @@ function registerTool_progress(server: McpServer) {
             description: 'Process files with progress updates',
             inputSchema: z.object({ files: z.array(z.string()) })
         },
-        async ({ files }, ctx): Promise<CallToolResult> => {
+        async ({ files }, ctx) => {
             const progressToken = ctx.mcpReq._meta?.progressToken;
 
             for (let i = 0; i < files.length; i++) {
@@ -313,7 +310,7 @@ function registerTool_progress(server: McpServer) {
                 }
             }
 
-            return { content: [{ type: 'text', text: `Processed ${files.length} files` }] };
+            return { structuredContent: { processedCount: files.length } };
         }
     );
     //#endregion registerTool_progress
@@ -332,7 +329,7 @@ function registerTool_sampling(server: McpServer) {
             description: 'Summarize text using the client LLM',
             inputSchema: z.object({ text: z.string() })
         },
-        async ({ text }, ctx): Promise<CallToolResult> => {
+        async ({ text }, ctx) => {
             const response = await ctx.mcpReq.requestSampling({
                 messages: [
                     {
@@ -346,12 +343,7 @@ function registerTool_sampling(server: McpServer) {
                 maxTokens: 500
             });
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `Model (${response.model}): ${JSON.stringify(response.content)}`
-                    }
-                ]
+                structuredContent: { model: response.model, content: response.content }
             };
         }
     );
@@ -367,7 +359,7 @@ function registerTool_elicitation(server: McpServer) {
             description: 'Collect user feedback via a form',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             const result = await ctx.mcpReq.elicitInput({
                 mode: 'form',
                 message: 'Please share your feedback:',
@@ -387,15 +379,10 @@ function registerTool_elicitation(server: McpServer) {
             });
             if (result.action === 'accept') {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Thanks! ${JSON.stringify(result.content)}`
-                        }
-                    ]
+                    structuredContent: { status: 'accepted', feedback: result.content }
                 };
             }
-            return { content: [{ type: 'text', text: 'Feedback declined.' }] };
+            return { structuredContent: { status: 'declined' } };
         }
     );
     //#endregion registerTool_elicitation
@@ -410,10 +397,9 @@ function registerTool_roots(server: McpServer) {
             description: 'List files across all workspace roots',
             inputSchema: z.object({})
         },
-        async (_args, _ctx): Promise<CallToolResult> => {
+        async () => {
             const { roots } = await server.server.listRoots();
-            const summary = roots.map(r => `${r.name ?? r.uri}: ${r.uri}`).join('\n');
-            return { content: [{ type: 'text', text: summary }] };
+            return { structuredContent: { roots: roots.map(r => ({ name: r.name ?? r.uri, uri: r.uri })) } };
         }
     );
     //#endregion registerTool_roots

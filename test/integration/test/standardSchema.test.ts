@@ -48,7 +48,7 @@ describe('Standard Schema Support', () => {
                         inputSchema
                     },
                     async ({ name, age }) => ({
-                        content: [{ type: 'text', text: `Hello ${name}, you are ${age} years old` }]
+                        structuredContent: { message: `Hello ${name}, you are ${age} years old` }
                     })
                 );
 
@@ -82,7 +82,6 @@ describe('Standard Schema Support', () => {
                         outputSchema
                     },
                     async ({ x, y }) => ({
-                        content: [{ type: 'text', text: `${x + y}` }],
                         structuredContent: { result: x + y, operation: 'addition' }
                     })
                 );
@@ -108,7 +107,7 @@ describe('Standard Schema Support', () => {
                 const inputSchema = type({ value: 'number' });
 
                 mcpServer.registerTool('double', { inputSchema }, async ({ value }) => ({
-                    content: [{ type: 'text', text: `${value * 2}` }]
+                    structuredContent: { result: value * 2 }
                 }));
 
                 await connectClientAndServer();
@@ -118,14 +117,14 @@ describe('Standard Schema Support', () => {
                     params: { name: 'double', arguments: { value: 21 } }
                 });
 
-                expect(result.content[0]).toEqual({ type: 'text', text: '42' });
+                expect(result.structuredContent).toEqual({ result: 42 });
             });
 
             test('should return validation error for invalid input type', async () => {
                 const inputSchema = type({ value: 'number' });
 
                 mcpServer.registerTool('double', { inputSchema }, async ({ value }) => ({
-                    content: [{ type: 'text', text: `${value * 2}` }]
+                    structuredContent: { result: value * 2 }
                 }));
 
                 await connectClientAndServer();
@@ -148,7 +147,7 @@ describe('Standard Schema Support', () => {
                 });
 
                 mcpServer.registerTool('calculate', { inputSchema }, async ({ operation }) => ({
-                    content: [{ type: 'text', text: operation }]
+                    structuredContent: { operation }
                 }));
 
                 await connectClientAndServer();
@@ -168,7 +167,7 @@ describe('Standard Schema Support', () => {
                 const inputSchema = type({ name: 'string', age: 'number' });
 
                 mcpServer.registerTool('greet', { inputSchema }, async ({ name, age }) => ({
-                    content: [{ type: 'text', text: `Hello ${name}, ${age}` }]
+                    structuredContent: { message: `Hello ${name}, ${age}` }
                 }));
 
                 await connectClientAndServer();
@@ -203,7 +202,7 @@ describe('Standard Schema Support', () => {
                         inputSchema
                     },
                     async ({ name, age }) => ({
-                        content: [{ type: 'text', text: `Hello ${name}, you are ${age} years old` }]
+                        structuredContent: { message: `Hello ${name}, you are ${age} years old` }
                     })
                 );
 
@@ -232,7 +231,7 @@ describe('Standard Schema Support', () => {
                 );
 
                 mcpServer.registerTool('weather', { inputSchema }, async () => ({
-                    content: [{ type: 'text', text: 'sunny' }]
+                    structuredContent: { weather: 'sunny' }
                 }));
 
                 await connectClientAndServer();
@@ -251,7 +250,7 @@ describe('Standard Schema Support', () => {
                 const inputSchema = toStandardJsonSchema(v.object({ value: v.number() }));
 
                 mcpServer.registerTool('double', { inputSchema }, async ({ value }) => ({
-                    content: [{ type: 'text', text: `${value * 2}` }]
+                    structuredContent: { result: value * 2 }
                 }));
 
                 await connectClientAndServer();
@@ -261,14 +260,14 @@ describe('Standard Schema Support', () => {
                     params: { name: 'double', arguments: { value: 21 } }
                 });
 
-                expect(result.content[0]).toEqual({ type: 'text', text: '42' });
+                expect(result.structuredContent).toEqual({ result: 42 });
             });
 
             test('should return validation error for invalid input type', async () => {
                 const inputSchema = toStandardJsonSchema(v.object({ value: v.number() }));
 
                 mcpServer.registerTool('double', { inputSchema }, async ({ value }) => ({
-                    content: [{ type: 'text', text: `${value * 2}` }]
+                    structuredContent: { result: value * 2 }
                 }));
 
                 await connectClientAndServer();
@@ -292,7 +291,7 @@ describe('Standard Schema Support', () => {
                 );
 
                 mcpServer.registerTool('calculate', { inputSchema }, async ({ operation }) => ({
-                    content: [{ type: 'text', text: operation }]
+                    structuredContent: { operation }
                 }));
 
                 await connectClientAndServer();
@@ -315,7 +314,7 @@ describe('Standard Schema Support', () => {
                 );
 
                 mcpServer.registerTool('setPercentage', { inputSchema }, async ({ percentage }) => ({
-                    content: [{ type: 'text', text: `${percentage}%` }]
+                    structuredContent: { percentage }
                 }));
 
                 await connectClientAndServer();
@@ -343,19 +342,19 @@ describe('Standard Schema Support', () => {
         test('should support tools with different schema libraries in same server', async () => {
             // Zod tool
             mcpServer.registerTool('zod-tool', { inputSchema: z.object({ value: z.string() }) }, async ({ value }) => ({
-                content: [{ type: 'text', text: `zod: ${value}` }]
+                structuredContent: { source: 'zod', value }
             }));
 
             // ArkType tool
             mcpServer.registerTool('arktype-tool', { inputSchema: type({ value: 'string' }) }, async ({ value }) => ({
-                content: [{ type: 'text', text: `arktype: ${value}` }]
+                structuredContent: { source: 'arktype', value }
             }));
 
             // Valibot tool
             mcpServer.registerTool(
                 'valibot-tool',
                 { inputSchema: toStandardJsonSchema(v.object({ value: v.string() })) },
-                async ({ value }) => ({ content: [{ type: 'text', text: `valibot: ${value}` }] })
+                async ({ value }) => ({ structuredContent: { source: 'valibot', value } })
             );
 
             await connectClientAndServer();
@@ -365,19 +364,19 @@ describe('Standard Schema Support', () => {
 
             // Call each tool
             const zodResult = await client.request({ method: 'tools/call', params: { name: 'zod-tool', arguments: { value: 'test' } } });
-            expect((zodResult.content[0] as TextContent).text).toBe('zod: test');
+            expect(zodResult.structuredContent).toEqual({ source: 'zod', value: 'test' });
 
             const arktypeResult = await client.request({
                 method: 'tools/call',
                 params: { name: 'arktype-tool', arguments: { value: 'test' } }
             });
-            expect((arktypeResult.content[0] as TextContent).text).toBe('arktype: test');
+            expect(arktypeResult.structuredContent).toEqual({ source: 'arktype', value: 'test' });
 
             const valibotResult = await client.request({
                 method: 'tools/call',
                 params: { name: 'valibot-tool', arguments: { value: 'test' } }
             });
-            expect((valibotResult.content[0] as TextContent).text).toBe('valibot: test');
+            expect(valibotResult.structuredContent).toEqual({ source: 'valibot', value: 'test' });
         });
     });
 
@@ -391,7 +390,7 @@ describe('Standard Schema Support', () => {
             );
 
             mcpServer.registerTool('greet', { inputSchema }, async ({ name }) => ({
-                content: [{ type: 'text', text: `Hello, ${name}!` }]
+                structuredContent: { greeting: `Hello, ${name}!` }
             }));
 
             await connectClientAndServer();
@@ -404,7 +403,7 @@ describe('Standard Schema Support', () => {
             });
 
             const result = await client.request({ method: 'tools/call', params: { name: 'greet', arguments: { name: 'World' } } });
-            expect((result.content[0] as TextContent).text).toBe('Hello, World!');
+            expect(result.structuredContent).toEqual({ greeting: 'Hello, World!' });
         });
 
         test('should reject invalid input via AJV validation', async () => {
@@ -415,7 +414,7 @@ describe('Standard Schema Support', () => {
 
             mcpServer.registerTool('double', { inputSchema }, async args => {
                 const { count } = args as { count: number };
-                return { content: [{ type: 'text', text: `${count * 2}` }] };
+                return { structuredContent: { result: count * 2 } };
             });
 
             await connectClientAndServer();
@@ -437,13 +436,13 @@ describe('Standard Schema Support', () => {
             });
 
             mcpServer.registerTool('greet-default', { inputSchema }, async ({ name }) => ({
-                content: [{ type: 'text', text: `Hello, ${name}!` }]
+                structuredContent: { greeting: `Hello, ${name}!` }
             }));
 
             await connectClientAndServer();
 
             const result = await client.request({ method: 'tools/call', params: { name: 'greet-default', arguments: { name: 'World' } } });
-            expect((result.content[0] as TextContent).text).toBe('Hello, World!');
+            expect(result.structuredContent).toEqual({ greeting: 'Hello, World!' });
         });
 
         test('should reject invalid input with default validator', async () => {
@@ -451,7 +450,7 @@ describe('Standard Schema Support', () => {
 
             mcpServer.registerTool('double-default', { inputSchema }, async args => {
                 const { count } = args as { count: number };
-                return { content: [{ type: 'text', text: `${count * 2}` }] };
+                return { structuredContent: { result: count * 2 } };
             });
 
             await connectClientAndServer();
@@ -590,7 +589,7 @@ describe('Standard Schema Support', () => {
             });
 
             mcpServer.registerTool('test', { inputSchema }, async () => ({
-                content: [{ type: 'text', text: 'ok' }]
+                structuredContent: { status: 'ok' }
             }));
 
             await connectClientAndServer();
@@ -626,7 +625,7 @@ describe('Standard Schema Support', () => {
             );
 
             mcpServer.registerTool('test', { inputSchema }, async () => ({
-                content: [{ type: 'text', text: 'ok' }]
+                structuredContent: { status: 'ok' }
             }));
 
             await connectClientAndServer();
@@ -660,7 +659,7 @@ describe('Standard Schema Support', () => {
             });
 
             mcpServer.registerTool('test', { inputSchema }, async () => ({
-                content: [{ type: 'text', text: 'ok' }]
+                structuredContent: { status: 'ok' }
             }));
 
             await connectClientAndServer();
@@ -701,7 +700,7 @@ describe('Standard Schema Support', () => {
                 const _enabled: boolean = enabled;
 
                 return {
-                    content: [{ type: 'text', text: `${_name}: ${_count}, enabled: ${_enabled}` }]
+                    structuredContent: { name: _name, count: _count, enabled: _enabled }
                 };
             });
 
@@ -715,7 +714,7 @@ describe('Standard Schema Support', () => {
                 }
             });
 
-            expect((result.content[0] as TextContent).text).toBe('test: 42, enabled: true');
+            expect(result.structuredContent).toEqual({ name: 'test', count: 42, enabled: true });
         });
 
         test('Valibot callback should receive correctly typed arguments', async () => {
@@ -734,7 +733,7 @@ describe('Standard Schema Support', () => {
                 const _enabled: boolean = enabled;
 
                 return {
-                    content: [{ type: 'text', text: `${_name}: ${_count}, enabled: ${_enabled}` }]
+                    structuredContent: { name: _name, count: _count, enabled: _enabled }
                 };
             });
 
@@ -748,7 +747,7 @@ describe('Standard Schema Support', () => {
                 }
             });
 
-            expect((result.content[0] as TextContent).text).toBe('test: 42, enabled: true');
+            expect(result.structuredContent).toEqual({ name: 'test', count: 42, enabled: true });
         });
     });
 });

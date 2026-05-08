@@ -16,7 +16,6 @@ import { randomUUID } from 'node:crypto';
 
 import { createMcpExpressApp } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult } from '@modelcontextprotocol/server';
 import { McpServer } from '@modelcontextprotocol/server';
 import cors from 'cors';
 import type { Request, Response } from 'express';
@@ -41,7 +40,7 @@ const getServer = () => {
         {
             description: 'A long-running task that sends progress updates. Server will disconnect mid-task to demonstrate polling.'
         },
-        async (ctx): Promise<CallToolResult> => {
+        async ctx => {
             const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
             console.log(`[${ctx.sessionId}] Starting long-task...`);
@@ -73,12 +72,7 @@ const getServer = () => {
             console.log(`[${ctx.sessionId}] Task complete`);
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Long task completed successfully!'
-                    }
-                ]
+                structuredContent: { message: 'Long task completed successfully!' }
             };
         }
     );

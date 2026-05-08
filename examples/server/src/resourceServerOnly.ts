@@ -19,7 +19,7 @@ import {
     requireBearerAuth
 } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { AuthInfo, CallToolResult, OAuthMetadata } from '@modelcontextprotocol/server';
+import type { AuthInfo, OAuthMetadata } from '@modelcontextprotocol/server';
 import { McpServer, OAuthError, OAuthErrorCode } from '@modelcontextprotocol/server';
 import type { Request, Response } from 'express';
 import * as z from 'zod/v4';
@@ -52,8 +52,8 @@ const server = new McpServer({ name: 'rs-only', version: '1.0.0' }, { capabiliti
 server.registerTool(
     'whoami',
     { description: 'Returns the authenticated subject.', inputSchema: z.object({}) },
-    async (_args, ctx): Promise<CallToolResult> => ({
-        content: [{ type: 'text', text: `client=${ctx.http?.authInfo?.clientId ?? 'anon'}` }]
+    async (_args, ctx) => ({
+        structuredContent: { client: ctx.http?.authInfo?.clientId ?? 'anon' }
     })
 );
 

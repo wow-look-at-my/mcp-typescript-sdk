@@ -11,7 +11,7 @@ import { randomUUID } from 'node:crypto';
 
 import { localhostHostValidation } from '@modelcontextprotocol/express';
 import { NodeStreamableHTTPServerTransport } from '@modelcontextprotocol/node';
-import type { CallToolResult, EventId, EventStore, GetPromptResult, ReadResourceResult, StreamId } from '@modelcontextprotocol/server';
+import type { EventId, EventStore, GetPromptResult, ReadResourceResult, StreamId } from '@modelcontextprotocol/server';
 import { isInitializeRequest, McpServer, ResourceTemplate } from '@modelcontextprotocol/server';
 import cors from 'cors';
 import type { Request, Response } from 'express';
@@ -117,9 +117,9 @@ function createMcpServer() {
         {
             description: 'Tests simple text content response'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             return {
-                content: [{ type: 'text', text: 'This is a simple text response for testing.' }]
+                structuredContent: { message: 'This is a simple text response for testing.' }
             };
         }
     );
@@ -130,9 +130,9 @@ function createMcpServer() {
         {
             description: 'Tests image content response'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             return {
-                content: [{ type: 'image', data: TEST_IMAGE_BASE64, mimeType: 'image/png' }]
+                structuredContent: { imageData: TEST_IMAGE_BASE64, mimeType: 'image/png' }
             };
         }
     );
@@ -143,9 +143,9 @@ function createMcpServer() {
         {
             description: 'Tests audio content response'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             return {
-                content: [{ type: 'audio', data: TEST_AUDIO_BASE64, mimeType: 'audio/wav' }]
+                structuredContent: { audioData: TEST_AUDIO_BASE64, mimeType: 'audio/wav' }
             };
         }
     );
@@ -156,18 +156,13 @@ function createMcpServer() {
         {
             description: 'Tests embedded resource content response'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             return {
-                content: [
-                    {
-                        type: 'resource',
-                        resource: {
-                            uri: 'test://embedded-resource',
-                            mimeType: 'text/plain',
-                            text: 'This is an embedded resource content.'
-                        }
-                    }
-                ]
+                structuredContent: {
+                    uri: 'test://embedded-resource',
+                    mimeType: 'text/plain',
+                    text: 'This is an embedded resource content.'
+                }
             };
         }
     );
@@ -178,20 +173,18 @@ function createMcpServer() {
         {
             description: 'Tests response with multiple content types (text, image, resource)'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             return {
-                content: [
-                    { type: 'text', text: 'Multiple content types test:' },
-                    { type: 'image', data: TEST_IMAGE_BASE64, mimeType: 'image/png' },
-                    {
-                        type: 'resource',
-                        resource: {
-                            uri: 'test://mixed-content-resource',
-                            mimeType: 'application/json',
-                            text: JSON.stringify({ test: 'data', value: 123 })
-                        }
+                structuredContent: {
+                    message: 'Multiple content types test:',
+                    imageData: TEST_IMAGE_BASE64,
+                    imageMimeType: 'image/png',
+                    resource: {
+                        uri: 'test://mixed-content-resource',
+                        mimeType: 'application/json',
+                        data: { test: 'data', value: 123 }
                     }
-                ]
+                }
             };
         }
     );
@@ -203,7 +196,7 @@ function createMcpServer() {
             description: 'Tests tool that emits log messages during execution',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             await ctx.mcpReq.notify({
                 method: 'notifications/message',
                 params: {
@@ -230,7 +223,7 @@ function createMcpServer() {
                 }
             });
             return {
-                content: [{ type: 'text', text: 'Tool with logging executed successfully' }]
+                structuredContent: { status: 'success', message: 'Tool with logging executed successfully' }
             };
         }
     );
@@ -242,7 +235,7 @@ function createMcpServer() {
             description: 'Tests tool that reports progress notifications',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             const progressToken = ctx.mcpReq._meta?.progressToken ?? 0;
             console.log('Progress token:', progressToken);
             await ctx.mcpReq.notify({
@@ -278,7 +271,7 @@ function createMcpServer() {
             });
 
             return {
-                content: [{ type: 'text', text: String(progressToken) }]
+                structuredContent: { progressToken: String(progressToken) }
             };
         }
     );
@@ -289,7 +282,7 @@ function createMcpServer() {
         {
             description: 'Tests error response handling'
         },
-        async (): Promise<CallToolResult> => {
+        async () => {
             throw new Error('This tool intentionally returns an error for testing');
         }
     );
@@ -302,7 +295,7 @@ function createMcpServer() {
                 'Tests SSE stream disconnection and client reconnection (SEP-1699). Server will close the stream mid-call and send the result after client reconnects.',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
             console.log(`[${ctx.sessionId}] Starting test_reconnection tool...`);
@@ -321,12 +314,10 @@ function createMcpServer() {
             console.log(`[${ctx.sessionId}] test_reconnection tool complete`);
 
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: 'Reconnection test completed successfully. If you received this, the client properly reconnected after stream closure.'
-                    }
-                ]
+                structuredContent: {
+                    status: 'success',
+                    message: 'Reconnection test completed successfully. If you received this, the client properly reconnected after stream closure.'
+                }
             };
         }
     );
@@ -340,7 +331,7 @@ function createMcpServer() {
                 prompt: z.string().describe('The prompt to send to the LLM')
             })
         },
-        async (args: { prompt: string }, ctx): Promise<CallToolResult> => {
+        async (args: { prompt: string }, ctx) => {
             try {
                 // Request sampling from client
                 const result = (await ctx.mcpReq.send({
@@ -362,21 +353,11 @@ function createMcpServer() {
                 const modelResponse = result.content?.text || result.message?.content?.text || 'No response';
 
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `LLM response: ${modelResponse}`
-                        }
-                    ]
+                    structuredContent: { llmResponse: modelResponse }
                 };
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Sampling not supported or error: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ]
+                    structuredContent: { error: `Sampling not supported or error: ${error instanceof Error ? error.message : String(error)}` }
                 };
             }
         }
@@ -391,7 +372,7 @@ function createMcpServer() {
                 message: z.string().describe('The message to show the user')
             })
         },
-        async (args: { message: string }, ctx): Promise<CallToolResult> => {
+        async (args: { message: string }, ctx) => {
             try {
                 // Request user input from client
                 const result = await ctx.mcpReq.send({
@@ -413,21 +394,11 @@ function createMcpServer() {
 
                 const elicitResult = result as { action?: string; content?: unknown };
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `User response: action=${elicitResult.action}, content=${JSON.stringify(elicitResult.content || {})}`
-                        }
-                    ]
+                    structuredContent: { action: elicitResult.action, content: elicitResult.content || {} }
                 };
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ]
+                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
                 };
             }
         }
@@ -440,7 +411,7 @@ function createMcpServer() {
             description: 'Tests elicitation with default values per SEP-1034',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             try {
                 // Request user input with default values for all primitive types
                 const result = await ctx.mcpReq.send({
@@ -484,21 +455,11 @@ function createMcpServer() {
 
                 const elicitResult = result as { action?: string; content?: unknown };
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Elicitation completed: action=${elicitResult.action}, content=${JSON.stringify(elicitResult.content || {})}`
-                        }
-                    ]
+                    structuredContent: { action: elicitResult.action, content: elicitResult.content || {} }
                 };
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ]
+                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
                 };
             }
         }
@@ -511,7 +472,7 @@ function createMcpServer() {
             description: 'Tests elicitation with enum schema improvements per SEP-1330',
             inputSchema: z.object({})
         },
-        async (_args, ctx): Promise<CallToolResult> => {
+        async (_args, ctx) => {
             try {
                 // Request user input with all 5 enum schema variants
                 const result = await ctx.mcpReq.send({
@@ -577,21 +538,11 @@ function createMcpServer() {
 
                 const elicitResult = result as { action?: string; content?: unknown };
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Elicitation completed: action=${elicitResult.action}, content=${JSON.stringify(elicitResult.content || {})}`
-                        }
-                    ]
+                    structuredContent: { action: elicitResult.action, content: elicitResult.content || {} }
                 };
             } catch (error) {
                 return {
-                    content: [
-                        {
-                            type: 'text',
-                            text: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}`
-                        }
-                    ]
+                    structuredContent: { error: `Elicitation not supported or error: ${error instanceof Error ? error.message : String(error)}` }
                 };
             }
         }
@@ -612,14 +563,9 @@ function createMcpServer() {
                     .optional()
             })
         },
-        async (args: { name?: string; address?: { street?: string; city?: string } }): Promise<CallToolResult> => {
+        async (args: { name?: string; address?: { street?: string; city?: string } }) => {
             return {
-                content: [
-                    {
-                        type: 'text',
-                        text: `JSON Schema 2020-12 tool called with: ${JSON.stringify(args)}`
-                    }
-                ]
+                structuredContent: { receivedArgs: args }
             };
         }
     );

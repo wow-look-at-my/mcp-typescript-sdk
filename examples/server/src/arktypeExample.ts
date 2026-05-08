@@ -21,7 +21,7 @@ server.registerTool(
         inputSchema: type({ name: 'string' })
     },
     async ({ name }) => ({
-        content: [{ type: 'text', text: `Hello, ${name}!` }]
+        structuredContent: { greeting: `Hello, ${name}!` }
     })
 );
 
